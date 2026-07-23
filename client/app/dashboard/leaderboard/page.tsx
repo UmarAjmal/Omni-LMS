@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-toastify";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 interface LeaderboardEntry {
   student_id: number;
@@ -61,140 +64,145 @@ export default function LeaderboardPage() {
     }
   };
 
-  // Find current student stats if role is student
   const studentIndex = leaderboard.findIndex(e => e.student_id === studentId);
   const myStats = studentIndex !== -1 ? leaderboard[studentIndex] : null;
   const myRank = studentIndex !== -1 ? studentIndex + 1 : null;
 
-  // Determine which entries to show
   const displayLimit = showAll ? leaderboard.length : 10;
   const displayedLeaderboard = leaderboard.slice(0, displayLimit);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <span className="material-symbols-outlined text-4xl text-[#F6B32B]">social_leaderboard</span>
-            Hunters Leaderboard
-          </h1>
-          <p className="text-sm text-white/50 mt-1">Top performing students based on approved leads and awarded points.</p>
-        </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Hunters Leaderboard" 
+          description="Top performing students based on approved leads and awarded points." 
+          icon="social_leaderboard"
+        />
         
         {(userRole === "admin" || userRole === "trainer") && leaderboard.length > 10 && (
-          <button 
-            onClick={() => setShowAll(!showAll)}
-            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10 text-sm font-bold transition-colors flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">
+          <Button variant="outline" onClick={() => setShowAll(!showAll)} className="shrink-0 mt-8 md:mt-0">
+            <span className="material-symbols-outlined mr-2">
               {showAll ? 'expand_less' : 'expand_more'}
             </span>
             {showAll ? 'Show Top 10 Only' : 'View All Rankings'}
-          </button>
+          </Button>
         )}
       </div>
 
       {userRole === "student" && myStats && (
-        <div className="bg-gradient-to-r from-[#101827] to-[#1a2234] border border-[#F6B32B]/30 rounded-2xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#F6B32B] opacity-[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <Card className="bg-gradient-to-r from-blue-900 to-blue-800 border-0 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
           
-          <h2 className="text-sm font-bold text-[#F6B32B] uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">person</span>
-            My Performance
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
-            <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-              <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Current Rank</div>
-              <div className="text-3xl font-black text-white">#{myRank}</div>
+          <CardContent className="p-8 relative z-10">
+            <h2 className="text-sm font-bold text-blue-300 uppercase tracking-wider mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">person</span>
+              My Performance
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                <div className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">Current Rank</div>
+                <div className="text-4xl font-black text-white">#{myRank}</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                <div className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">Total Points</div>
+                <div className="text-4xl font-black text-amber-400">{myStats.total_points}</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                <div className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">Approved Leads</div>
+                <div className="text-4xl font-black text-emerald-400">{myStats.approved_leads}</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                <div className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-2">Total Leads</div>
+                <div className="text-4xl font-black text-white">{myStats.total_submissions}</div>
+              </div>
             </div>
-            <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-              <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Total Points</div>
-              <div className="text-3xl font-black text-[#F6B32B]">{myStats.total_points}</div>
-            </div>
-            <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-              <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Approved Leads</div>
-              <div className="text-3xl font-black text-emerald-400">{myStats.approved_leads}</div>
-            </div>
-            <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-              <div className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Total Leads</div>
-              <div className="text-3xl font-black text-white">{myStats.total_submissions}</div>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 md:p-8">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
-          </div>
-        ) : leaderboard.length === 0 ? (
-          <div className="p-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-white/10 mb-4">emoji_events</span>
-            <p className="text-white/40">No leaderboard data available yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {displayedLeaderboard.map((entry, index) => {
-              const isMe = userRole === "student" && entry.student_id === studentId;
-              
-              return (
-                <div 
-                  key={entry.student_id} 
-                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                    isMe ? 'bg-[#F6B32B]/10 border-[#F6B32B]/50 shadow-[0_0_15px_rgba(246,179,43,0.15)] relative overflow-hidden' :
-                    index === 0 ? 'bg-gradient-to-r from-[#F6B32B]/20 to-transparent border-[#F6B32B]/40 shadow-[0_0_15px_rgba(246,179,43,0.1)]' : 
-                    index === 1 ? 'bg-white/[0.04] border-white/20' : 
-                    index === 2 ? 'bg-white/[0.02] border-white/10' : 
-                    'bg-transparent border-transparent hover:bg-white/[0.02]'
-                  }`}
-                >
-                  {isMe && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#F6B32B]"></div>
-                  )}
-                  
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg ${
-                      index === 0 && !isMe ? 'bg-[#F6B32B] text-black shadow-lg shadow-[#F6B32B]/30' : 
-                      index === 1 && !isMe ? 'bg-gray-300 text-gray-800' : 
-                      index === 2 && !isMe ? 'bg-[#CD7F32] text-white' : 
-                      isMe ? 'bg-[#F6B32B] text-black shadow-lg shadow-[#F6B32B]/30' :
-                      'bg-white/10 text-white/50'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div>
-                      <div className={`font-bold flex items-center gap-2 ${
-                        index === 0 || isMe ? 'text-[#F6B32B] text-lg' : 'text-white'
+      <Card>
+        <CardContent className="p-2 md:p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-sm font-medium text-gray-500">Loading rankings...</p>
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-gray-400">
+                <span className="material-symbols-outlined text-[32px]">emoji_events</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No Rankings Yet</h3>
+              <p className="text-sm text-gray-500">The leaderboard will populate once leads are approved and points are awarded.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {displayedLeaderboard.map((entry, index) => {
+                const isMe = userRole === "student" && entry.student_id === studentId;
+                
+                return (
+                  <div 
+                    key={entry.student_id} 
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border transition-all ${
+                      isMe ? 'bg-blue-50 border-blue-200 shadow-sm relative overflow-hidden' :
+                      index === 0 ? 'bg-gradient-to-r from-amber-50/50 to-transparent border-amber-200 shadow-sm' : 
+                      index === 1 ? 'bg-gray-50 border-gray-200' : 
+                      index === 2 ? 'bg-orange-50/30 border-orange-200' : 
+                      'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
+                    }`}
+                  >
+                    {isMe && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+                    )}
+                    
+                    <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-0">
+                      <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center font-black text-xl ${
+                        index === 0 && !isMe ? 'bg-amber-100 text-amber-600 border border-amber-200' : 
+                        index === 1 && !isMe ? 'bg-gray-200 text-gray-700 border border-gray-300' : 
+                        index === 2 && !isMe ? 'bg-orange-100 text-orange-700 border border-orange-200' : 
+                        isMe ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                        'bg-gray-50 text-gray-500 border border-gray-100'
                       }`}>
-                        {entry.first_name} {entry.last_name}
-                        {isMe && (
-                          <span className="px-1.5 py-0.5 bg-[#F6B32B] text-black text-[9px] font-black uppercase tracking-wider rounded">You</span>
-                        )}
+                        {index + 1}
                       </div>
-                      <div className="text-xs text-white/40">{entry.enrollment_id}</div>
+                      <div>
+                        <div className={`font-bold text-lg flex items-center gap-2 ${
+                          index === 0 && !isMe ? 'text-amber-700' : 
+                          isMe ? 'text-blue-700' : 'text-gray-900'
+                        }`}>
+                          {entry.first_name} {entry.last_name}
+                          {isMe && (
+                            <span className="px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-md">You</span>
+                          )}
+                        </div>
+                        <div className="text-sm font-medium text-gray-500 font-mono mt-0.5">{entry.enrollment_id}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-8 text-right">
-                    <div className="hidden md:block">
-                      <div className="text-sm font-bold text-emerald-400">{entry.approved_leads} Approved</div>
-                      <div className="text-xs text-white/30">{entry.total_submissions} Total</div>
-                    </div>
-                    <div className="min-w-[80px]">
-                      <div className={`font-black text-2xl ${index === 0 || isMe ? 'text-[#F6B32B]' : 'text-white'}`}>
-                        {entry.total_points}
+                    <div className="flex items-center gap-8 sm:gap-10 sm:text-right ml-16 sm:ml-0">
+                      <div className="hidden md:block text-left sm:text-right">
+                        <div className="text-sm font-bold text-emerald-600">{entry.approved_leads} Approved</div>
+                        <div className="text-xs font-medium text-gray-400 mt-1">{entry.total_submissions} Total Submissions</div>
                       </div>
-                      <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Points</div>
+                      <div className="min-w-[100px] bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none">
+                        <div className={`font-black text-3xl leading-none ${
+                          index === 0 && !isMe ? 'text-amber-500' : 
+                          isMe ? 'text-blue-600' : 'text-gray-900'
+                        }`}>
+                          {entry.total_points}
+                        </div>
+                        <div className="text-[11px] text-gray-500 uppercase tracking-widest font-bold mt-1">Points</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

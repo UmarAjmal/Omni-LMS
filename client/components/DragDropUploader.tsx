@@ -49,9 +49,13 @@ export default function DragDropUploader({
           const base64Data = reader.result as string;
           
           // Upload to server endpoint
+          const token = typeof window !== "undefined" ? localStorage.getItem("lms_token") : null;
           const res = await apiClient(`/api/upload`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
               filename: file.name,
               base64Data
@@ -124,7 +128,7 @@ export default function DragDropUploader({
       className={`w-full min-h-[110px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer transition-all ${
         isDragActive
           ? "border-primary bg-primary/5 scale-[1.01]"
-          : "border-white/15 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20"
+          : "border-white/15 bg-gray-50 hover:bg-gray-50 hover:border-[var(--border)]"
       }`}
     >
       <input

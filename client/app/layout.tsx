@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} dark antialiased`}
+      className={`${inter.variable} antialiased`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,7 +33,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body-md overflow-x-hidden selection:bg-gold-accent/30 min-h-screen">
+      <body className="font-sans overflow-x-hidden selection:bg-blue-100 selection:text-blue-900 min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
         <NotificationProvider>
           <Navigation>
             {children}
@@ -48,8 +48,8 @@ export default function RootLayout({
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
-          toastClassName="glass-card border-l-4 border-gold-accent !bg-navy-accent/50"
+          theme="light"
+          toastClassName="bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] shadow-[var(--shadow-md)] rounded-xl"
         />
         </NotificationProvider>
       </body>

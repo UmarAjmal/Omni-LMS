@@ -4,9 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
-
-// All fetch calls use relative /api/* paths → served by Next.js route handlers
-// which proxy to the Express backend. This prevents the HTML-404 SyntaxError.
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Input, Label } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
 
 const COURSES = [
   { id: "fullstack-ai", label: "Full Stack AI Engineer" },
@@ -112,124 +115,168 @@ export default function AdminTrainersPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Trainer Management</h1>
-          <p className="text-white/40 text-sm">{trainers.length} trainers enrolled</p>
-        </div>
-        <button
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <PageHeader 
+          title="Trainer Management" 
+          description={`${trainers.length} trainers enrolled`}
+          icon="badge"
+        />
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black font-bold rounded-xl hover:opacity-90 text-sm"
+          variant={showForm ? "outline" : "primary"}
         >
-          <span className="material-symbols-outlined text-[18px]">{showForm ? "close" : "person_add"}</span>
+          <span className="material-symbols-outlined mr-2">{showForm ? "close" : "person_add"}</span>
           {showForm ? "Cancel" : "Add Trainer"}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
-        <div className="bg-[#101827] border border-[#F6B32B]/20 rounded-2xl p-6 mb-6">
-          <h2 className="text-base font-bold text-white mb-5">Create Trainer Account</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {[
-              { label: "First Name *", value: firstName, setter: setFirstName, placeholder: "John" },
-              { label: "Last Name *", value: lastName, setter: setLastName, placeholder: "Doe" },
-              { label: "Email *", value: email, setter: setEmail, placeholder: "trainer@example.com" },
-              { label: "Phone", value: phone, setter: setPhone, placeholder: "+92 300 0000000" },
-              { label: "Department", value: department, setter: setDepartment, placeholder: "Engineering" },
-            ].map(({ label, value, setter, placeholder }) => (
-              <div key={label}>
-                <label className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5 block">{label}</label>
-                <input
-                  value={value}
-                  onChange={(e) => setter(e.target.value)}
-                  placeholder={placeholder}
-                  className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40"
-                />
-              </div>
-            ))}
+        <Card className="border-blue-200 shadow-md">
+          <div className="bg-blue-50 px-6 py-4 border-b border-blue-100 flex items-center gap-2">
+            <span className="material-symbols-outlined text-blue-600">person_add</span>
+            <h2 className="text-base font-bold text-blue-900">Create Trainer Account</h2>
           </div>
-          <div className="mb-4">
-            <label className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2 block">Assigned Courses</label>
-            <div className="flex gap-2 flex-wrap">
-              {COURSES.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => toggleCourse(c.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                    selectedCourses.includes(c.id)
-                      ? "bg-[#F6B32B]/15 border-[#F6B32B]/30 text-[#F6B32B]"
-                      : "bg-white/[0.04] border-white/[0.08] text-white/50"
-                  }`}
-                >
-                  {c.label}
-                </button>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {[
+                { label: "First Name *", value: firstName, setter: setFirstName, placeholder: "John" },
+                { label: "Last Name *", value: lastName, setter: setLastName, placeholder: "Doe" },
+                { label: "Email *", value: email, setter: setEmail, placeholder: "trainer@example.com" },
+                { label: "Phone", value: phone, setter: setPhone, placeholder: "+92 300 0000000" },
+                { label: "Department", value: department, setter: setDepartment, placeholder: "Engineering" },
+              ].map(({ label, value, setter, placeholder }) => (
+                <div key={label}>
+                  <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">{label}</Label>
+                  <Input
+                    value={value}
+                    onChange={(e) => setter(e.target.value)}
+                    placeholder={placeholder}
+                  />
+                </div>
               ))}
             </div>
-          </div>
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-4">
-            <p className="text-xs text-blue-400">A temporary password <strong>FalconSwift@123</strong> will be generated. The trainer will receive login credentials via email.</p>
-          </div>
-          <button
-            onClick={handleCreate}
-            disabled={isSubmitting}
-            className="px-6 py-2.5 bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
-          >
-            {isSubmitting ? <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" /> : <span className="material-symbols-outlined text-[18px]">person_add</span>}
-            {isSubmitting ? "Creating…" : "Create Trainer"}
-          </button>
-        </div>
+            
+            <div className="mb-6">
+              <Label className="mb-3 block text-xs tracking-widest uppercase text-gray-500">Assigned Courses</Label>
+              <div className="flex gap-2 flex-wrap">
+                {COURSES.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => toggleCourse(c.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      selectedCourses.includes(c.id)
+                        ? "bg-blue-50 border-blue-200 text-blue-700"
+                        : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
+              <p className="text-xs text-blue-700">A temporary password <strong>FalconSwift@123</strong> will be generated. The trainer will receive login credentials via email.</p>
+            </div>
+            <div className="flex justify-end pt-4 border-t border-gray-100">
+              <Button
+                onClick={handleCreate}
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+              >
+                {!isSubmitting && <span className="material-symbols-outlined mr-2">person_add</span>}
+                Create Trainer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {isLoading ? (
-        <div className="min-h-[40vh] flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
+        <div className="flex flex-col items-center justify-center h-64 space-y-4 bg-white rounded-2xl border border-gray-200">
+          <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+          <p className="text-gray-500 font-medium text-sm">Loading trainers...</p>
         </div>
       ) : trainers.length === 0 ? (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-14 text-center">
-          <span className="material-symbols-outlined text-white/20 text-5xl block mb-3">badge</span>
-          <p className="text-white/40 text-sm">No trainers yet</p>
-          <button onClick={() => setShowForm(true)} className="mt-4 text-[#F6B32B] text-sm font-semibold hover:underline">Add your first trainer</button>
-        </div>
+        <Card className="border-dashed border-2 bg-gray-50/50">
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-gray-300">
+              <span className="material-symbols-outlined text-[32px]">badge</span>
+            </div>
+            <p className="text-gray-500 font-medium mb-4">No trainers enrolled yet</p>
+            {!showForm && (
+              <Button variant="outline" onClick={() => setShowForm(true)}>
+                Add your first trainer
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_2fr_auto] gap-4 px-6 py-3 border-b border-white/[0.06] text-[11px] font-bold uppercase tracking-wider text-white/30">
-            <span>Trainer</span><span>Department</span><span>Employee ID</span><span>Courses</span><span>Action</span>
-          </div>
-          <div className="divide-y divide-white/[0.04]">
-            {trainers.map((trainer) => (
-              <div key={trainer.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1fr_2fr_auto] gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#1E2A3B] flex items-center justify-center shrink-0 border border-white/[0.06] overflow-hidden">
-                    {trainer.avatar_url ? (
-                      <img src={trainer.avatar_url} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <span className="text-white/50 font-bold">{(trainer.first_name || "?")[0]}</span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{trainer.first_name} {trainer.last_name}</p>
-                    <p className="text-[11px] text-white/30 truncate">{trainer.email}</p>
-                  </div>
-                </div>
-                <span className="text-sm text-white/50">{trainer.department || "—"}</span>
-                <span className="text-xs font-mono text-[#F6B32B]">{trainer.employee_id || "—"}</span>
-                <div className="flex flex-wrap gap-1">
-                  {(trainer.assigned_courses || []).slice(0, 3).map((c) => (
-                    <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/40">{c}</span>
-                  ))}
-                  {!trainer.assigned_courses?.length && <span className="text-white/25 text-xs">None assigned</span>}
-                </div>
-                <button
-                  onClick={() => handleDelete(trainer.id)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                >
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Trainer</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Employee ID</TableHead>
+                <TableHead>Courses</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trainers.map((trainer) => (
+                <TableRow key={trainer.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden">
+                        {trainer.avatar_url ? (
+                          <img src={trainer.avatar_url} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <span className="text-gray-500 font-bold">{(trainer.first_name || "?")[0]}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">{trainer.first_name} {trainer.last_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{trainer.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-600">
+                    {trainer.department || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-xs font-semibold text-blue-600">{trainer.employee_id || "—"}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {(trainer.assigned_courses || []).slice(0, 2).map((c) => (
+                        <Badge key={c} variant="secondary" className="text-[10px]">
+                          {c}
+                        </Badge>
+                      ))}
+                      {(trainer.assigned_courses || []).length > 2 && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          +{(trainer.assigned_courses || []).length - 2}
+                        </Badge>
+                      )}
+                      {!trainer.assigned_courses?.length && <span className="text-gray-400 text-xs italic">None</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(trainer.id)}
+                      className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

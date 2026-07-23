@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-toastify";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
 
 interface Campaign {
   id: number;
@@ -53,67 +56,79 @@ export default function StudentCampaignsPage() {
     }
   };
 
-  const getPriorityColor = (p: string) => {
+  const getPriorityVariant = (p: string) => {
     switch (p?.toLowerCase()) {
-      case 'urgent': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      case 'high': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
-      case 'medium': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      case 'low': return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
-      default: return 'text-white/70 bg-white/5 border-white/10';
+      case 'urgent': return 'destructive';
+      case 'high': return 'warning';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'outline';
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-gray-500">Loading campaigns...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">My Assigned Campaigns</h1>
-        <p className="text-sm text-white/50 mt-1">Select a campaign to view details and start hunting leads.</p>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="My Assigned Campaigns" 
+        description="Select a campaign to view details and start hunting leads." 
+        icon="radar"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {campaigns.length === 0 ? (
-          <div className="col-span-full bg-[#101827] border border-white/[0.06] rounded-2xl p-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-white/10 mb-4">radar</span>
-            <p className="text-white/40">You have no active campaigns assigned.</p>
-          </div>
+          <Card className="col-span-full border-dashed border-2 bg-gray-50/50">
+            <CardContent className="p-16 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-gray-300">
+                <span className="material-symbols-outlined text-[32px]">radar</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No Active Campaigns</h3>
+              <p className="text-gray-500">You have no active campaigns assigned at the moment.</p>
+            </CardContent>
+          </Card>
         ) : (
           campaigns.map(camp => (
             <Link 
               key={camp.id} 
               href={`/student/campaigns/${camp.id}`}
-              className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 hover:border-white/20 transition-all hover:-translate-y-1 flex flex-col h-full group"
+              className="block outline-none"
             >
-              <div className="flex justify-between items-start mb-4">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getPriorityColor(camp.priority)}`}>
-                  {camp.priority || 'Normal'}
-                </span>
-                {camp.status === 'active' && (
-                  <span className="flex items-center gap-1 text-emerald-400 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active
-                  </span>
-                )}
-              </div>
-              
-              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#F6B32B] transition-colors">{camp.title}</h3>
-              <p className="text-sm text-white/50 line-clamp-2 mb-6 flex-1">{camp.description || "No description provided."}</p>
-              
-              <div className="flex items-center justify-between text-xs text-white/40 border-t border-white/[0.06] pt-4 mt-auto">
-                <div className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">event</span>
-                  {new Date(camp.deadline).toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-1 text-[#F6B32B] font-bold">
-                  Start Hunting <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </div>
-              </div>
+              <Card className="h-full hover:border-blue-300 hover:shadow-md transition-all group cursor-pointer flex flex-col relative overflow-hidden">
+                <CardContent className="p-6 flex flex-col flex-1">
+                  <div className="flex justify-between items-start mb-4 gap-4">
+                    <Badge variant={getPriorityVariant(camp.priority) as any} className="uppercase tracking-wider text-[10px]">
+                      {camp.priority || 'Normal'}
+                    </Badge>
+                    {camp.status === 'active' && (
+                      <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded-md shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                      </span>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">{camp.title}</h3>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-6 flex-1">{camp.description || "No description provided."}</p>
+                  
+                  <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      <span className="material-symbols-outlined text-[16px]">event</span>
+                      {new Date(camp.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm font-bold text-blue-600 group-hover:text-blue-700 transition-colors">
+                      Start Hunting <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Card>
             </Link>
           ))
         )}

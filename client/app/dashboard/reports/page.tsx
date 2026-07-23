@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
-
-// Uses relative /api/* paths → Next.js route handlers proxy to Express backend
+import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 export default function AdminReportsPage() {
   const router = useRouter();
@@ -41,10 +44,10 @@ export default function AdminReportsPage() {
   }, [fetchReports, router]);
 
   const getGradeColor = (score?: number) => {
-    if (!score) return "text-white/30";
-    if (score >= 80) return "text-emerald-400";
-    if (score >= 60) return "text-[#F6B32B]";
-    return "text-red-400";
+    if (!score) return "text-gray-400";
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-blue-600";
+    return "text-red-600";
   };
 
   const getAttPct = (row: any) => {
@@ -54,107 +57,144 @@ export default function AdminReportsPage() {
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Reports</h1>
-        <p className="text-white/40 text-sm">Analytics and performance reports</p>
-      </div>
+    <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+      <PageHeader 
+        title="Reports" 
+        description="Analytics and performance reports"
+      />
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2">
         {[
           { key: "students", label: "Student Performance", icon: "trending_up" },
           { key: "attendance", label: "Attendance Report", icon: "event_available" },
         ].map((tab) => (
-          <button
+          <Button
             key={tab.key}
+            variant={activeTab === tab.key ? "default" : "outline"}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === tab.key
-                ? "bg-[#F6B32B] text-black"
-                : "bg-white/[0.04] text-white/50 border border-white/[0.08] hover:text-white"
-            }`}
           >
-            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+            <span className="material-symbols-outlined mr-2">{tab.icon}</span>
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {isLoading ? (
-        <div className="min-h-[40vh] flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
-        </div>
+        <Card className="min-h-[40vh] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+        </Card>
       ) : activeTab === "students" ? (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-3 border-b border-white/[0.06] text-[11px] font-bold uppercase tracking-wider text-white/30">
-            <span>Student</span><span>Program</span><span>Tasks</span><span>Avg Score</span><span>Attendance</span>
-          </div>
-          {studentReport.length === 0 ? (
-            <div className="p-14 text-center"><p className="text-white/30 text-sm">No data yet</p></div>
-          ) : (
-            <div className="divide-y divide-white/[0.04]">
-              {studentReport.map((s) => {
-                const attPct = s.total_attendance > 0 ? Math.round((s.present_days / s.total_attendance) * 100) : 0;
-                return (
-                  <div key={s.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-4 items-center hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#1E2A3B] flex items-center justify-center shrink-0 overflow-hidden border border-white/[0.06]">
-                        {s.avatar_url ? <img src={s.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-white/50 font-bold text-sm">{(s.first_name || "?")[0]}</span>}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{s.first_name} {s.last_name}</p>
-                        <p className="text-[11px] text-white/30 truncate">{s.enrollment_id}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-[#F6B32B] font-semibold">{s.program || "—"}</span>
-                    <span className="text-sm text-white/60"><span className="font-bold text-white">{s.graded_tasks ?? 0}</span> / {s.total_tasks ?? 0}</span>
-                    <span className={`text-sm font-bold ${getGradeColor(parseFloat(s.avg_score))}`}>{s.avg_score != null ? `${s.avg_score}%` : "—"}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${attPct >= 75 ? "bg-emerald-500" : attPct >= 50 ? "bg-[#F6B32B]" : "bg-red-500"}`} style={{ width: `${attPct}%` }} />
-                      </div>
-                      <span className="text-xs text-white/50 w-8 text-right">{attPct}%</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Program</TableHead>
+                <TableHead>Tasks</TableHead>
+                <TableHead>Avg Score</TableHead>
+                <TableHead className="w-[150px]">Attendance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {studentReport.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-gray-500">No data yet</TableCell>
+                </TableRow>
+              ) : (
+                studentReport.map((s) => {
+                  const attPct = s.total_attendance > 0 ? Math.round((s.present_days / s.total_attendance) * 100) : 0;
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
+                            {s.avatar_url ? <img src={s.avatar_url} className="w-full h-full object-cover" alt="" /> : <span className="text-gray-500 font-bold text-sm">{(s.first_name || "?")[0]}</span>}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-gray-900 truncate">{s.first_name} {s.last_name}</p>
+                            <p className="text-[11px] font-medium text-gray-500 truncate">{s.enrollment_id}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-blue-600 font-semibold">{s.program || "—"}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium text-gray-600"><span className="font-bold text-gray-900">{s.graded_tasks ?? 0}</span> / {s.total_tasks ?? 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`text-sm font-black ${getGradeColor(parseFloat(s.avg_score))}`}>{s.avg_score != null ? `${s.avg_score}%` : "—"}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${attPct >= 75 ? "bg-green-500" : attPct >= 50 ? "bg-blue-600" : "bg-red-500"}`} style={{ width: `${attPct}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-500 w-8 text-right">{attPct}%</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       ) : (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-3 border-b border-white/[0.06] text-[11px] font-bold uppercase tracking-wider text-white/30">
-            <span>Student</span><span>Present</span><span>Absent</span><span>Late</span><span>Leave</span><span>Rate</span>
-          </div>
-          {attendanceSummary.length === 0 ? (
-            <div className="p-14 text-center"><p className="text-white/30 text-sm">No attendance data yet</p></div>
-          ) : (
-            <div className="divide-y divide-white/[0.04]">
-              {attendanceSummary.map((row) => {
-                const pct = getAttPct(row);
-                return (
-                  <div key={row.student_id} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] gap-4 px-6 py-4 items-center hover:bg-white/[0.02] transition-colors">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{row.first_name} {row.last_name}</p>
-                      <p className="text-[11px] text-white/30">{row.enrollment_id}</p>
-                    </div>
-                    <span className="text-sm font-bold text-emerald-400">{row.present_count ?? 0}</span>
-                    <span className="text-sm font-bold text-red-400">{row.absent_count ?? 0}</span>
-                    <span className="text-sm font-bold text-orange-400">{row.late_count ?? 0}</span>
-                    <span className="text-sm font-bold text-blue-400">{row.leave_count ?? 0}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${pct >= 75 ? "bg-emerald-500" : pct >= 50 ? "bg-[#F6B32B]" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="text-xs text-white/50">{pct}%</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Present</TableHead>
+                <TableHead>Absent</TableHead>
+                <TableHead>Late</TableHead>
+                <TableHead>Leave</TableHead>
+                <TableHead className="w-[150px]">Rate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {attendanceSummary.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-gray-500">No attendance data yet</TableCell>
+                </TableRow>
+              ) : (
+                attendanceSummary.map((row) => {
+                  const pct = getAttPct(row);
+                  return (
+                    <TableRow key={row.student_id}>
+                      <TableCell>
+                        <p className="text-sm font-bold text-gray-900">{row.first_name} {row.last_name}</p>
+                        <p className="text-[11px] font-medium text-gray-500">{row.enrollment_id}</p>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-bold text-green-600">{row.present_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-bold text-red-600">{row.absent_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-bold text-orange-600">{row.late_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-bold text-blue-600">{row.leave_count ?? 0}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${pct >= 75 ? "bg-green-500" : pct >= 50 ? "bg-blue-600" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-500 w-8 text-right">{pct}%</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

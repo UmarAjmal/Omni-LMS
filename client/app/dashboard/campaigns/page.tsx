@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-toastify";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 interface Campaign {
   id: number;
@@ -41,99 +45,114 @@ export default function CampaignsPage() {
     }
   };
 
-  const getPriorityColor = (p?: string | null) => {
-    if (!p) return 'text-white/70 bg-white/5 border-white/10';
+  const getPriorityVariant = (p?: string | null): "primary" | "danger" | "warning" | "success" | "secondary" => {
+    if (!p) return "secondary";
     switch (p.toLowerCase()) {
-      case 'urgent': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      case 'high': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
-      case 'medium': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      case 'low': return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
-      default: return 'text-white/70 bg-white/5 border-white/10';
+      case 'urgent': return "danger";
+      case 'high': return "warning";
+      case 'medium': return "primary"; // blueish
+      case 'low': return "secondary";
+      default: return "secondary";
     }
   };
 
-  const getStatusColor = (s?: string | null) => {
-    if (!s) return 'text-white/70 bg-white/5 border-white/10';
+  const getStatusVariant = (s?: string | null): "primary" | "danger" | "warning" | "success" | "secondary" => {
+    if (!s) return "secondary";
     switch (s.toLowerCase()) {
-      case 'active': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-      case 'completed': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      case 'expired': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      case 'draft': return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
-      default: return 'text-white/70 bg-white/5 border-white/10';
+      case 'active': return "success";
+      case 'completed': return "primary";
+      case 'expired': return "danger";
+      case 'draft': return "secondary";
+      default: return "secondary";
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Lead Campaigns</h1>
-          <p className="text-sm text-white/50 mt-1">Manage business development campaigns and target leads.</p>
-        </div>
-        <Link
-          href="/dashboard/campaigns/create"
-          className="bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black px-5 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2 shadow-lg shadow-[#F6B32B]/20"
-        >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          Create Campaign
+        <PageHeader 
+          title="Lead Campaigns" 
+          description="Manage business development campaigns and target leads." 
+        />
+        <Link href="/dashboard/campaigns/create">
+          <Button>
+            <span className="material-symbols-outlined mr-2">add</span>
+            Create Campaign
+          </Button>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {campaigns.length === 0 ? (
-          <div className="col-span-full bg-[#101827] border border-white/[0.06] rounded-2xl p-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-white/10 mb-4">radar</span>
-            <p className="text-white/40">No campaigns found. Create one to get started.</p>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+          <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mb-4" />
+          <p className="text-sm font-medium text-gray-500">Loading campaigns...</p>
+        </div>
+      ) : campaigns.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center px-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 text-gray-400">
+            <span className="material-symbols-outlined text-[32px]">radar</span>
           </div>
-        ) : (
-          campaigns.map(camp => (
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Campaigns Found</h3>
+          <p className="text-sm text-gray-500 mb-6 max-w-md">Get started by creating your first business development or lead generation campaign.</p>
+          <Link href="/dashboard/campaigns/create">
+            <Button variant="outline">Create First Campaign</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {campaigns.map((camp) => (
             <Link 
               key={camp.id} 
               href={`/dashboard/campaigns/${camp.id}`}
-              className="bg-[#101827] border border-white/[0.06] rounded-2xl p-5 hover:border-white/20 transition-all hover:-translate-y-1 flex flex-col h-full group"
+              className="block group h-full"
             >
-              <div className="flex justify-between items-start mb-3">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(camp.status)}`}>
-                  {camp.status}
-                </span>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${getPriorityColor(camp.priority)}`}>
-                  {camp.priority}
-                </span>
-              </div>
-              
-              <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#F6B32B] transition-colors line-clamp-1">{camp.title}</h3>
-              <p className="text-xs text-white/50 line-clamp-2 mb-4 flex-1">{camp.description || "No description provided."}</p>
-              
-              <div className="flex flex-wrap gap-1 mb-4">
-                {(camp.platforms || []).slice(0, 3).map((p: string) => (
-                  <span key={p} className="px-2 py-1 bg-white/5 text-white/70 text-[10px] rounded border border-white/10">{p}</span>
-                ))}
-                {(camp.platforms || []).length > 3 && (
-                  <span className="px-2 py-1 bg-white/5 text-white/70 text-[10px] rounded border border-white/10">+{camp.platforms.length - 3}</span>
-                )}
-              </div>
+              <Card className="h-full hover:border-gray-300 hover:shadow-md transition-all">
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <Badge variant={getStatusVariant(camp.status)} className="uppercase text-[10px] tracking-wider">
+                      {camp.status}
+                    </Badge>
+                    <Badge variant={getPriorityVariant(camp.priority)} className="uppercase text-[10px] tracking-wider">
+                      {camp.priority}
+                    </Badge>
+                  </div>
+                  
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    {camp.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
+                    {camp.description || "No description provided."}
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-1.5 mb-6">
+                    {(camp.platforms || []).slice(0, 3).map((p: string) => (
+                      <span key={p} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                        {p}
+                      </span>
+                    ))}
+                    {(camp.platforms || []).length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-md">
+                        +{camp.platforms.length - 3}
+                      </span>
+                    )}
+                  </div>
 
-              <div className="flex items-center justify-between text-[11px] text-white/40 border-t border-white/[0.06] pt-3 mt-auto">
-                <div className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">event</span>
-                  {new Date(camp.deadline).toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-1 text-[#F6B32B]">
-                  View Details <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                </div>
-              </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      <span className="material-symbols-outlined text-[16px]">event</span>
+                      {new Date(camp.deadline).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm font-semibold text-blue-600 group-hover:translate-x-1 transition-transform">
+                      View Details
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

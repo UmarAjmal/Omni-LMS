@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
-
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
 
 const COURSES = [
   { id: "fullstack-ai", label: "Full Stack AI Engineer", icon: "smart_toy" },
@@ -204,53 +207,18 @@ export default function NewTaskPage() {
 
 
   return (
-    <div className="relative text-xs md:text-sm font-sans text-white/90">
-      <style dangerouslySetInnerHTML={{__html: `
-        .glacier-card {
-          background: rgba(10, 20, 38, 0.7);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-        }
-        .text-editor-toolbar button {
-          transition: all 0.15s ease;
-        }
-        .text-editor-toolbar button:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: #ffffff;
-        }
-        .custom-checkbox {
-          width: 16px;
-          height: 16px;
-          border: 1.5px solid rgba(255, 255, 255, 0.3);
-          border-radius: 4px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .custom-checkbox.checked {
-          background: #fcac11;
-          border-color: #fcac11;
-          color: #000000;
-        }
-      `}} />
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="New Task Creator" 
+        description="Design course milestones, set goals and assign objectives to registered students." 
+      />
 
-      <div className="p-2 md:p-6 flex-1 relative z-10 w-full max-w-7xl mx-auto">
-        
-        {/* Page Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">New Task Creator</h2>
-          <p className="text-on-surface-variant font-light text-xs mt-1">Design course milestones, set goals and assign objectives to registered students.</p>
-        </div>
-
-        {/* Top Section: Course Selector Filters */}
-        <div className="glacier-card p-4 rounded-2xl mb-6">
-          <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2.5">
+      <Card>
+        <CardContent className="p-6">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">
             Select Targeted Course
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {COURSES.map((course) => {
               const isActive = selectedCourse === course.id;
               return (
@@ -261,56 +229,55 @@ export default function NewTaskPage() {
                     setSelectedCourse(course.id);
                     setSelectedStudentIds([]); // Clear selection when course changes
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "border-primary bg-primary/10 text-primary shadow-[0_0_15px_rgba(252,163,17,0.15)]"
-                      : "border-white/10 bg-white/5 text-on-surface-variant hover:text-white hover:bg-white/10"
+                      ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">{course.icon}</span>
+                  <span className="material-symbols-outlined text-[20px]">{course.icon}</span>
                   {course.label}
                 </button>
               );
             })}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Bottom Section: 2 Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column - Form & Text Area (7 cols on large) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="glacier-card p-6 rounded-2xl">
-              
-              <form onSubmit={handleAssignTask} className="space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column - Form & Text Area (7 cols on large) */}
+        <div className="lg:col-span-7 space-y-6">
+          <Card>
+            <CardContent className="p-8">
+              <form onSubmit={handleAssignTask} className="space-y-6">
                 
                 {/* Task Title */}
                 <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
-                    Task Title *
-                  </label>
-                  <input
+                  <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">
+                    Task Title <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
                     type="text"
                     placeholder="e.g. Building a REST API in Node.js"
                     value={taskTitle}
                     onChange={(e) => setTaskTitle(e.target.value)}
-                    className="w-full bg-[#0a1426]/60 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-primary/50 text-xs font-medium transition-colors"
                     required
                   />
                 </div>
 
                 {/* Office Word Style Editor Container */}
                 <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
-                    Task Description & Requirements *
-                  </label>
+                  <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">
+                    Task Description & Requirements <span className="text-red-500">*</span>
+                  </Label>
                   
                   {/* Editor ToolBar */}
-                  <div className="text-editor-toolbar flex items-center gap-1 bg-[#101f38] border border-white/10 border-b-0 rounded-t-lg px-2 py-1.5 text-on-surface-variant">
+                  <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 border-b-0 rounded-t-xl px-3 py-2 text-gray-500">
                     <button
                       type="button"
                       onClick={() => setIsBold(!isBold)}
-                      className={`p-1.5 rounded flex items-center justify-center ${isBold ? "text-primary bg-white/5" : ""}`}
+                      className={`p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors ${isBold ? "text-blue-600 bg-blue-50" : ""}`}
                       title="Bold"
                     >
                       <span className="material-symbols-outlined text-[18px]">format_bold</span>
@@ -318,7 +285,7 @@ export default function NewTaskPage() {
                     <button
                       type="button"
                       onClick={() => setIsItalic(!isItalic)}
-                      className={`p-1.5 rounded flex items-center justify-center ${isItalic ? "text-primary bg-white/5" : ""}`}
+                      className={`p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors ${isItalic ? "text-blue-600 bg-blue-50" : ""}`}
                       title="Italic"
                     >
                       <span className="material-symbols-outlined text-[18px]">format_italic</span>
@@ -326,16 +293,16 @@ export default function NewTaskPage() {
                     <button
                       type="button"
                       onClick={() => setIsCode(!isCode)}
-                      className={`p-1.5 rounded flex items-center justify-center ${isCode ? "text-primary bg-white/5" : ""}`}
+                      className={`p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors ${isCode ? "text-blue-600 bg-blue-50" : ""}`}
                       title="Code Block"
                     >
                       <span className="material-symbols-outlined text-[18px]">code</span>
                     </button>
-                    <div className="h-4 w-px bg-white/10 mx-1"></div>
+                    <div className="h-4 w-px bg-gray-300 mx-2"></div>
                     <button
                       type="button"
                       onClick={() => setTaskContent(prev => prev + "\n- ")}
-                      className="p-1.5 rounded flex items-center justify-center"
+                      className="p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors"
                       title="Bullet List"
                     >
                       <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
@@ -343,7 +310,7 @@ export default function NewTaskPage() {
                     <button
                       type="button"
                       onClick={() => setTaskContent(prev => prev + "\n1. ")}
-                      className="p-1.5 rounded flex items-center justify-center"
+                      className="p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors"
                       title="Numbered List"
                     >
                       <span className="material-symbols-outlined text-[18px]">format_list_numbered</span>
@@ -351,19 +318,19 @@ export default function NewTaskPage() {
                     <button
                       type="button"
                       onClick={() => setTaskContent(prev => prev + "\n> ")}
-                      className="p-1.5 rounded flex items-center justify-center"
+                      className="p-1.5 rounded flex items-center justify-center hover:bg-gray-200 hover:text-gray-900 transition-colors"
                       title="Quote"
                     >
                       <span className="material-symbols-outlined text-[18px]">format_quote</span>
                     </button>
-                    <div className="h-4 w-px bg-white/10 mx-1"></div>
+                    <div className="h-4 w-px bg-gray-300 mx-2"></div>
                     <button
                       type="button"
                       onClick={() => {
                         setTaskContent("");
                         toast.info("Content cleared.");
                       }}
-                      className="p-1.5 rounded flex items-center justify-center ml-auto hover:text-red-400"
+                      className="p-1.5 rounded flex items-center justify-center ml-auto hover:bg-red-50 hover:text-red-600 transition-colors text-gray-400"
                       title="Clear Content"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
@@ -381,86 +348,85 @@ export default function NewTaskPage() {
                       fontStyle: isItalic ? "italic" : "normal",
                       fontFamily: isCode ? "monospace" : "inherit"
                     }}
-                    className="w-full bg-[#0a1426]/60 border border-white/10 rounded-b-lg p-3 text-white focus:outline-none focus:border-primary/50 text-xs font-medium transition-colors resize-none"
+                    className="w-full bg-white border border-gray-200 rounded-b-xl p-4 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm transition-colors resize-y min-h-[150px]"
                     required
                   />
                 </div>
 
                 {/* Additional Settings (XP, Due Date) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
+                    <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">
                       Milestone Reward (XP / Points)
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="number"
                       value={points}
                       onChange={(e) => setPoints(e.target.value)}
                       placeholder="e.g. 100"
-                      className="w-full bg-[#0a1426]/60 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-primary/50 text-xs font-medium transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">
+                    <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">
                       Submission Deadline
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="date"
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full bg-[#0a1426]/60 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-primary/50 text-xs font-medium transition-colors"
                     />
                   </div>
                 </div>
 
                 {/* Dynamic Reference Links Builder */}
-                <div className="pt-4 border-t border-white/5">
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">
+                <div className="pt-6 border-t border-gray-100">
+                  <Label className="mb-3 block text-xs tracking-widest uppercase text-gray-500">
                     Reference Materials & Links
-                  </label>
+                  </Label>
                   
                   {/* Link Inputs */}
-                  <div className="flex flex-col sm:flex-row gap-2 mb-3">
-                    <input
+                  <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                    <Input
                       type="text"
                       placeholder="Resource Title (e.g. Git Cheatsheet)"
                       value={newLinkTitle}
                       onChange={(e) => setNewLinkTitle(e.target.value)}
-                      className="flex-1 bg-[#0a1426]/60 border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-primary/50 text-xs"
+                      className="flex-1"
                     />
-                    <input
+                    <Input
                       type="url"
                       placeholder="URL (https://...)"
                       value={newLinkUrl}
                       onChange={(e) => setNewLinkUrl(e.target.value)}
-                      className="flex-1 bg-[#0a1426]/60 border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-primary/50 text-xs"
+                      className="flex-1"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={handleAddLink}
-                      className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold rounded-lg px-4 py-2.5 flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+                      className="shrink-0"
                     >
-                      <span className="material-symbols-outlined text-sm">add</span>
+                      <span className="material-symbols-outlined mr-2">add</span>
                       Add Link
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Links List */}
                   {links.length > 0 && (
-                    <div className="space-y-1.5 bg-[#0a1426]/30 p-3 rounded-lg border border-white/5">
+                    <div className="space-y-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
                       {links.map((link) => (
-                        <div key={link.id} className="flex items-center justify-between gap-3 text-xs bg-white/5 p-2 rounded-md border border-white/5">
-                          <div className="flex items-center gap-2 truncate">
-                            <span className="material-symbols-outlined text-[16px] text-primary">link</span>
-                            <span className="font-semibold text-white truncate">{link.title}</span>
-                            <span className="text-[10px] text-on-surface-variant truncate">({link.url})</span>
+                        <div key={link.id} className="flex items-center justify-between gap-4 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                          <div className="flex items-center gap-3 truncate min-w-0">
+                            <span className="material-symbols-outlined text-[18px] text-blue-500 shrink-0">link</span>
+                            <span className="font-semibold text-gray-900 truncate">{link.title}</span>
+                            <span className="text-xs text-gray-400 truncate">({link.url})</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleRemoveLink(link.id)}
-                            className="text-on-surface-variant hover:text-red-400 p-0.5 rounded transition-colors"
+                            className="text-gray-400 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors shrink-0"
                           >
-                            <span className="material-symbols-outlined text-[16px]">close</span>
+                            <span className="material-symbols-outlined text-[18px]">close</span>
                           </button>
                         </div>
                       ))}
@@ -469,76 +435,74 @@ export default function NewTaskPage() {
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-4 border-t border-white/5">
-                  <button
+                <div className="pt-6 border-t border-gray-100">
+                  <Button
                     type="submit"
                     disabled={isSubmittingTask}
-                    className="w-full bg-primary hover:bg-primary/95 disabled:opacity-60 text-black font-bold py-3 px-6 rounded-xl shadow-[0_8px_24px_-4px_rgba(252,163,17,0.3)] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer font-semibold uppercase tracking-wider text-xs"
+                    isLoading={isSubmittingTask}
+                    className="w-full text-base py-6"
                   >
-                    {isSubmittingTask ? (
-                      <><div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />Creating Task…</>
-                    ) : (
-                      <><span className="material-symbols-outlined text-[18px]">assignment_turned_in</span>
-                      Assign Task to Candidates ({selectedStudentIds.length})</>
-                    )}
-                  </button>
+                    {!isSubmittingTask && <span className="material-symbols-outlined mr-2">assignment_turned_in</span>}
+                    Assign Task to Candidates ({selectedStudentIds.length})
+                  </Button>
                 </div>
 
               </form>
 
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Right Column - Student Selectors (5 cols on large) */}
-          <div className="lg:col-span-5">
-            <div className="glacier-card p-6 rounded-2xl flex flex-col h-full min-h-[500px]">
-              
-              <div className="mb-4">
-                <h3 className="text-sm font-bold text-white mb-1">Target Candidates</h3>
-                <p className="text-on-surface-variant text-[11px]">Select enrolled students from this program to assign this task.</p>
-              </div>
-
+        {/* Right Column - Student Selectors (5 cols on large) */}
+        <div className="lg:col-span-5">
+          <Card className="flex flex-col h-full min-h-[600px] max-h-[800px]">
+            <CardHeader className="pb-4">
+              <CardTitle>Target Candidates</CardTitle>
+              <CardDescription>Select enrolled students from this program to assign this task.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col flex-1 min-h-0">
               {/* Student Search & Select All Actions */}
-              <div className="flex gap-2 mb-4 items-center">
+              <div className="flex gap-3 mb-4 items-center shrink-0">
                 <div className="relative flex-1">
-                  <input
+                  <Input
                     type="text"
                     placeholder="Search candidate name or ID..."
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
-                    className="w-full bg-[#0a1426]/60 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white focus:outline-none focus:border-primary/50 text-xs"
+                    className="pl-10"
                   />
-                  <span className="material-symbols-outlined absolute left-2.5 top-2.5 text-on-surface-variant text-[16px]">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">
                     search
                   </span>
                 </div>
                 {filteredStudents.length > 0 && (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={handleSelectAll}
-                    className="bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1"
+                    className="shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[16px]">
+                    <span className="material-symbols-outlined mr-2 text-[18px]">
                       {filteredStudents.every((s) => selectedStudentIds.includes(s.id)) ? "deselect" : "select_all"}
                     </span>
                     {filteredStudents.every((s) => selectedStudentIds.includes(s.id)) ? "Deselect" : "Select All"}
-                  </button>
+                  </Button>
                 )}
               </div>
 
               {/* Students List Container */}
-              <div className="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar space-y-2 pr-1">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-2 pb-4">
                 {isLoadingStudents ? (
-                  <div className="text-center py-12">
-                    <div className="w-6 h-6 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto mb-2" />
-                    <p className="text-on-surface-variant text-xs font-light">Loading program students...</p>
+                  <div className="text-center py-20">
+                    <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium text-sm">Loading program students...</p>
                   </div>
                 ) : filteredStudents.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-white/5 rounded-xl bg-white/[0.01]">
-                    <span className="material-symbols-outlined text-on-surface-variant/30 text-3xl mb-2 block">
+                  <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                    <span className="material-symbols-outlined text-gray-400 text-4xl mb-3 block">
                       group_off
                     </span>
-                    <p className="text-on-surface-variant text-xs font-light">No students found matching current criteria.</p>
+                    <p className="text-gray-500 font-medium text-sm">No students found matching current criteria.</p>
                   </div>
                 ) : (
                   filteredStudents.map((student) => {
@@ -547,37 +511,35 @@ export default function NewTaskPage() {
                       <div
                         key={student.id}
                         onClick={() => handleToggleStudent(student.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 cursor-pointer ${
+                        className={`flex items-center gap-4 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                           isChecked
-                            ? "bg-primary/5 border-primary/30"
-                            : "bg-[#0a1426]/30 border-white/5 hover:border-white/10"
+                            ? "bg-blue-50/50 border-blue-500"
+                            : "bg-white border-gray-100 hover:border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {/* Checkbox */}
-                        <div className={`custom-checkbox shrink-0 ${isChecked ? "checked" : ""}`}>
-                          {isChecked && (
-                            <span className="material-symbols-outlined text-[12px] font-bold">check</span>
-                          )}
+                        <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors shrink-0 ${isChecked ? "bg-blue-600 border-blue-600" : "bg-white border-gray-300"}`}>
+                          {isChecked && <span className="material-symbols-outlined text-white text-[16px] font-bold">check</span>}
                         </div>
 
                         {/* Student Info */}
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <img
                             alt={`${student.first_name} avatar`}
-                            className="w-8 h-8 rounded-full border border-white/10 object-cover shrink-0"
+                            className="w-10 h-10 rounded-full border border-gray-200 object-cover shrink-0"
                             src={student.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuCkrg1w2_6vKacVMQL6osveRCQ1WSGupSYxo3AoLL8rnZS5gopYelH_tI5vTRQpTiEmXYnUj6uetUcTQ7kmbhdWatOBAG3JVIwiTXV6DBAMNIOrBrXGbCQsspYzd-u-1trTn3C-e_j0uXBzs6jmVdZ_gzD0Nt7pt7Ajj0EK4WBhdYq7c_5Z1gc1KA0C4UcqCLLkBDkFnwZqYk1VR2DspoCRx3wF6nlSbmIlN6heo26LB7gyv9_wJMOt62pSGw9_WzxdJhBVMlJybrkx"}
                           />
                           <div className="truncate">
-                            <p className="text-white font-bold text-xs truncate">
+                            <p className="text-gray-900 font-bold text-sm truncate">
                               {student.first_name} {student.last_name}
                             </p>
-                            <p className="text-[10px] text-on-surface-variant/60 truncate">
+                            <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">
                               ID: {student.enrollment_id || "N/A"}
                             </p>
                           </div>
                         </div>
 
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-on-surface-variant shrink-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-gray-100 border border-gray-200 text-gray-600 shrink-0">
                           {student.program || "Course"}
                         </span>
                       </div>
@@ -587,21 +549,16 @@ export default function NewTaskPage() {
               </div>
 
               {/* Selection Summary Footer */}
-              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-on-surface-variant/80">
-                <span>Enrolled in Program: <strong>{filteredStudents.length}</strong></span>
-                <span>Selected Candidates: <strong className="text-primary">{selectedStudentIds.length}</strong></span>
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600 shrink-0">
+                <span>Enrolled: <strong className="text-gray-900">{filteredStudents.length}</strong></span>
+                <span>Selected: <strong className="text-blue-600 text-base">{selectedStudentIds.length}</strong></span>
               </div>
-
-            </div>
-          </div>
-
+            </CardContent>
+          </Card>
         </div>
 
       </div>
 
-      {/* Decorative Background Elements */}
-      <div className="fixed bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full pointer-events-none -z-10"></div>
-      <div className="fixed top-[-100px] left-[-100px] w-[500px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none -z-10"></div>
     </div>
   );
 }

@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-toastify";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
 
 interface Lead {
   id: number;
@@ -29,7 +35,7 @@ export default function LeadsReviewPage() {
   
   // Review Modal State
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [reviewStatus, setReviewStatus] = useState("approved");
+  const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [points, setPoints] = useState(10);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,150 +90,173 @@ export default function LeadsReviewPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Lead Review Pipeline</h1>
-        <p className="text-sm text-white/50 mt-1">Review student submissions, provide feedback, and award points.</p>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="Lead Review Pipeline" 
+        description="Review student submissions, provide feedback, and award points." 
+      />
 
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
+      <Card>
         {isLoading ? (
-           <div className="flex items-center justify-center h-64">
-             <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
-           </div>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mb-4"></div>
+            <p className="text-sm font-medium text-gray-500">Loading leads...</p>
+          </div>
         ) : leads.length === 0 ? (
-          <div className="p-12 text-center">
-            <span className="material-symbols-outlined text-6xl text-white/10 mb-4">fact_check</span>
-            <p className="text-white/40">No pending leads to review.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-gray-400">
+              <span className="material-symbols-outlined text-[32px]">fact_check</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">No Pending Leads</h3>
+            <p className="text-sm text-gray-500 max-w-sm">There are currently no lead submissions waiting for your review.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-white/[0.02]">
-                <tr className="text-white/40 border-b border-white/5">
-                  <th className="font-medium p-4">Business & Campaign</th>
-                  <th className="font-medium p-4">Student</th>
-                  <th className="font-medium p-4">Contact Info</th>
-                  <th className="font-medium p-4">Quality</th>
-                  <th className="font-medium p-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {leads.map(lead => (
-                  <tr key={lead.id} className="text-white/70 hover:bg-white/[0.02] transition-colors">
-                    <td className="p-4">
-                      <div className="font-bold text-white mb-1">{lead.business_name}</div>
-                      <div className="text-xs text-white/40 flex items-center gap-1">
-                        <span className="bg-[#F6B32B]/10 text-[#F6B32B] px-1.5 py-0.5 rounded">{lead.platform}</span>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Business & Campaign</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Contact Info</TableHead>
+                <TableHead>Quality</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leads.map(lead => (
+                <TableRow key={lead.id}>
+                  <TableCell>
+                    <div className="font-bold text-gray-900 mb-1 tracking-tight">{lead.business_name}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px]">{lead.platform}</Badge>
+                      <span className="text-xs text-gray-500 font-medium truncate max-w-[150px]" title={lead.campaign_title}>
                         {lead.campaign_title}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs border border-blue-200">
+                        {lead.first_name[0]}{lead.last_name[0]}
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-xs">
-                          {lead.first_name[0]}{lead.last_name[0]}
+                      <span className="font-semibold text-gray-900">{lead.first_name} {lead.last_name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1.5 text-xs text-gray-600">
+                      {lead.email && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] text-gray-400">mail</span> 
+                          {lead.email}
                         </div>
-                        <span className="font-medium">{lead.first_name} {lead.last_name}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-xs space-y-1">
-                      {lead.email && <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">mail</span> {lead.email}</div>}
-                      {lead.phone && <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">call</span> {lead.phone}</div>}
-                      {lead.website && <div className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">language</span> <a href={lead.website} target="_blank" className="text-blue-400 hover:underline">Link</a></div>}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex gap-1">
-                        {[1,2,3,4,5].map(star => (
-                          <span key={star} className={`material-symbols-outlined text-[14px] ${star <= lead.lead_quality ? 'text-[#F6B32B]' : 'text-white/10'}`} style={{fontVariationSettings: "'FILL' 1"}}>star</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button 
-                        onClick={() => setSelectedLead(lead)}
-                        className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors"
-                      >
-                        Review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                      {lead.phone && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] text-gray-400">call</span> 
+                          {lead.phone}
+                        </div>
+                      )}
+                      {lead.website && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] text-gray-400">language</span> 
+                          <a href={lead.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">Visit Site</a>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(star => (
+                        <span key={star} className={`material-symbols-outlined text-[16px] ${star <= lead.lead_quality ? 'text-amber-400' : 'text-gray-200'}`} style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedLead(lead)}>
+                      Review Lead
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
 
       {/* Review Modal */}
       {selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#101827] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-xl shadow-2xl border-0 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
-                <h2 className="text-xl font-bold text-white">Review Lead</h2>
-                <p className="text-sm text-white/50">{selectedLead.business_name} by {selectedLead.first_name}</p>
+                <h2 className="text-lg font-bold text-gray-900 tracking-tight">Review Submission</h2>
+                <p className="text-sm text-gray-500 mt-1 font-medium"><span className="text-gray-900 font-semibold">{selectedLead.business_name}</span> submitted by {selectedLead.first_name}</p>
               </div>
-              <button onClick={() => setSelectedLead(null)} className="text-white/50 hover:text-white">
+              <button onClick={() => setSelectedLead(null)} className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-              <form id="reviewForm" onSubmit={handleReviewSubmit} className="space-y-6">
+            <div className="p-6 overflow-y-auto flex-1">
+              <form id="reviewForm" onSubmit={handleReviewSubmit} className="space-y-8">
                 <div>
-                  <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Decision</label>
-                  <div className="flex gap-4">
-                    <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex flex-col items-center gap-2 transition-all ${reviewStatus === 'approved' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}>
+                  <Label className="mb-3 block text-xs tracking-wider uppercase text-gray-500">Decision</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center gap-3 transition-all ${reviewStatus === 'approved' ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}>
                       <input type="radio" name="status" value="approved" checked={reviewStatus === 'approved'} onChange={() => setReviewStatus('approved')} className="hidden" />
-                      <span className="material-symbols-outlined text-3xl">check_circle</span>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${reviewStatus === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      </div>
                       <span className="font-bold">Approve</span>
                     </label>
-                    <label className={`flex-1 cursor-pointer border rounded-xl p-4 flex flex-col items-center gap-2 transition-all ${reviewStatus === 'rejected' ? 'bg-red-500/10 border-red-500 text-red-400' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}>
+                    <label className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center gap-3 transition-all ${reviewStatus === 'rejected' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}>
                       <input type="radio" name="status" value="rejected" checked={reviewStatus === 'rejected'} onChange={() => setReviewStatus('rejected')} className="hidden" />
-                      <span className="material-symbols-outlined text-3xl">cancel</span>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${reviewStatus === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'}`}>
+                        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                      </div>
                       <span className="font-bold">Reject</span>
                     </label>
                   </div>
                 </div>
 
                 {reviewStatus === 'approved' && (
-                  <div>
-                    <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Points to Award</label>
-                    <input 
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label className="mb-2 block text-xs tracking-wider uppercase text-gray-500">Points to Award</Label>
+                    <Input 
                       type="number" 
                       value={points} 
                       onChange={e => setPoints(Number(e.target.value))} 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#F6B32B] outline-none"
                     />
+                    <p className="text-xs text-gray-500 mt-2">Points will be added to the student's leaderboard score.</p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Feedback (Optional)</label>
+                  <Label className="mb-2 block text-xs tracking-wider uppercase text-gray-500">Feedback (Optional)</Label>
                   <textarea 
                     value={feedback} 
                     onChange={e => setFeedback(e.target.value)} 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-[#F6B32B] outline-none h-24"
-                    placeholder="Provide constructive feedback..."
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all min-h-[100px] resize-y text-sm"
+                    placeholder={reviewStatus === 'approved' ? "Great job on finding this lead..." : "This lead doesn't meet the criteria because..."}
                   />
                 </div>
               </form>
             </div>
 
-            <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-white/[0.02]">
-              <button onClick={() => setSelectedLead(null)} className="px-5 py-2.5 rounded-xl font-bold text-sm text-white hover:bg-white/5 transition-colors">
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50">
+              <Button variant="outline" onClick={() => setSelectedLead(null)}>
                 Cancel
-              </button>
-              <button 
+              </Button>
+              <Button 
                 type="submit" 
                 form="reviewForm"
                 disabled={isSubmitting}
-                className="bg-[#F6B32B] hover:bg-[#E09B18] text-black px-6 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+                isLoading={isSubmitting}
+                className={reviewStatus === 'approved' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}
               >
-                {isSubmitting ? "Saving..." : "Submit Review"}
-              </button>
+                Submit Review
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>

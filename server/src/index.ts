@@ -2529,7 +2529,7 @@ app.get('/api/student/:studentId/fees', authenticateToken, requireStudent, async
   
   try {
     const studentCheck = await client.query('SELECT user_id FROM students WHERE id = $1', [studentId]);
-    if (studentCheck.rows.length === 0 || studentCheck.rows[0].user_id !== req.user.id) {
+    if (studentCheck.rows.length === 0 || String(studentCheck.rows[0].user_id) !== String(req.user.id)) {
       client.release();
       return res.status(403).json({ success: false, error: 'Unauthorized: Can only view your own fees' });
     }

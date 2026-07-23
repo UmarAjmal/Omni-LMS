@@ -114,20 +114,20 @@ export default function CreateCampaignPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/campaigns" className="text-white/50 hover:text-white transition-colors">
+        <Link href="/dashboard/campaigns" className="text-[var(--text-secondary)] hover:text-white transition-colors">
           <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </Link>
         <div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Create Campaign</h1>
-          <p className="text-sm text-white/50 mt-1">Configure target audience, keywords, and assignments.</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Configure target audience, keywords, and assignments.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 md:p-8 space-y-8">
+      <form onSubmit={handleSubmit} className="bg-white border border-[var(--border)] rounded-2xl p-6 md:p-8 space-y-8">
         
         {/* Core Details */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Core Details</h2>
+          <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Core Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="col-span-full">
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Campaign Name *</label>
@@ -136,7 +136,7 @@ export default function CreateCampaignPage() {
                 value={title} 
                 onChange={e => setTitle(e.target.value)} 
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F6B32B] transition-colors"
+                className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-colors"
                 placeholder="e.g. AI Chatbot Leads - Q3"
               />
             </div>
@@ -145,7 +145,7 @@ export default function CreateCampaignPage() {
               <textarea 
                 value={description} 
                 onChange={e => setDescription(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F6B32B] transition-colors h-24"
+                className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-colors h-24"
                 placeholder="Campaign objectives and overview..."
               />
             </div>
@@ -154,7 +154,7 @@ export default function CreateCampaignPage() {
 
         {/* Search Parameters */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Search Parameters</h2>
+          <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Search Parameters</h2>
           <div className="space-y-6">
             <div>
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Target Keywords * (Press Enter)</label>
@@ -163,12 +163,12 @@ export default function CreateCampaignPage() {
                 value={keywordInput} 
                 onChange={e => setKeywordInput(e.target.value)}
                 onKeyDown={handleAddKeyword}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F6B32B] transition-colors mb-2"
+                className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-colors mb-2"
                 placeholder="Type keyword and press enter..."
               />
               <div className="flex flex-wrap gap-2">
                 {keywords.map(kw => (
-                  <div key={kw} className="bg-[#F6B32B]/20 border border-[#F6B32B]/30 text-[#F6B32B] px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                  <div key={kw} className="bg-[var(--primary)]/20 border border-[var(--primary)]/30 text-[var(--primary)] px-3 py-1 rounded-full text-sm flex items-center gap-2">
                     {kw}
                     <button type="button" onClick={() => removeKeyword(kw)} className="hover:text-white">&times;</button>
                   </div>
@@ -180,7 +180,7 @@ export default function CreateCampaignPage() {
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Platforms</label>
               <div className="flex flex-wrap gap-3">
                 {availablePlatforms.map(plat => (
-                  <label key={plat} className={`cursor-pointer border rounded-xl px-4 py-2 text-sm font-semibold transition-all ${platforms.includes(plat) ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}>
+                  <label key={plat} className={`cursor-pointer border rounded-xl px-4 py-2 text-sm font-semibold transition-all ${platforms.includes(plat) ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-white/5 border-[var(--border)] text-[var(--text-secondary)] hover:bg-white/10'}`}>
                     <input type="checkbox" className="hidden" checked={platforms.includes(plat)} onChange={() => togglePlatform(plat)} />
                     {plat}
                   </label>
@@ -192,19 +192,19 @@ export default function CreateCampaignPage() {
 
         {/* Goals & Timelines */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Goals & Timelines</h2>
+          <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Goals & Timelines</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Total Target</label>
-              <input type="number" value={targetLeads} onChange={e => setTargetLeads(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={targetLeads} onChange={e => setTargetLeads(Number(e.target.value))} className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white" />
             </div>
             <div>
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Daily Target</label>
-              <input type="number" value={dailyTarget} onChange={e => setDailyTarget(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" />
+              <input type="number" value={dailyTarget} onChange={e => setDailyTarget(Number(e.target.value))} className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white" />
             </div>
             <div>
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Priority</label>
-              <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none">
+              <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white focus:outline-none">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -213,37 +213,37 @@ export default function CreateCampaignPage() {
             </div>
             <div>
               <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2">Deadline *</label>
-              <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" />
+              <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white" />
             </div>
           </div>
         </div>
 
         {/* Instructions */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Instructions</h2>
+          <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Instructions</h2>
           <textarea 
             value={instructions} 
             onChange={e => setInstructions(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#F6B32B] transition-colors h-32"
+            className="w-full bg-white/5 border border-[var(--border)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--primary)] transition-colors h-32"
             placeholder="Special instructions for the hunters..."
           />
         </div>
 
         {/* Assignment */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Assign Students</h2>
-          <div className="max-h-64 overflow-y-auto custom-scrollbar border border-white/10 rounded-xl p-2 bg-white/[0.02]">
+          <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Assign Students</h2>
+          <div className="max-h-64 overflow-y-auto custom-scrollbar border border-[var(--border)] rounded-xl p-2 bg-gray-50">
             {availableStudents.map(student => (
               <label key={student.id} className="flex items-center gap-3 p-3 hover:bg-white/5 rounded-lg cursor-pointer transition-colors">
                 <input 
                   type="checkbox" 
                   checked={selectedStudents.includes(student.id)} 
                   onChange={() => toggleStudent(student.id)} 
-                  className="w-4 h-4 rounded border-white/20 bg-transparent text-[#F6B32B] focus:ring-[#F6B32B]"
+                  className="w-4 h-4 rounded border-[var(--border)] bg-transparent text-[var(--primary)] focus:ring-[#F6B32B]"
                 />
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-white">{student.first_name} {student.last_name}</span>
-                  <span className="text-xs text-white/40">{student.enrollment_id} • {student.program || "No Course"}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">{student.enrollment_id} • {student.program || "No Course"}</span>
                 </div>
               </label>
             ))}
@@ -251,14 +251,14 @@ export default function CreateCampaignPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-4 pt-6 border-t border-white/10">
+        <div className="flex justify-end gap-4 pt-6 border-t border-[var(--border)]">
           <Link href="/dashboard/campaigns" className="px-6 py-3 rounded-xl font-bold text-sm text-white hover:bg-white/5 transition-colors">
             Cancel
           </Link>
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="bg-[#F6B32B] hover:bg-[#E09B18] text-black px-8 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-[var(--primary)] hover:bg-[#E09B18] text-black px-8 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? "Creating..." : "Launch Campaign"}
             <span className="material-symbols-outlined text-[20px]">rocket_launch</span>

@@ -4,6 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
 
 // Uses relative /api/* paths → Next.js route handlers proxy to Express backend
 
@@ -81,68 +86,127 @@ export default function AdminAnnouncementsPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Announcements</h1>
-          <p className="text-white/40 text-sm">Broadcast updates to all students and trainers</p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black font-bold rounded-xl hover:opacity-90 text-sm">
-          <span className="material-symbols-outlined text-[18px]">{showForm ? "close" : "add"}</span>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Announcements" 
+          description="Broadcast updates to all students and trainers" 
+          icon="campaign"
+        />
+        <Button 
+          variant={showForm ? "outline" : "primary"} 
+          onClick={() => setShowForm(!showForm)} 
+          className="shrink-0 mt-8 md:mt-0"
+        >
+          <span className="material-symbols-outlined mr-2">{showForm ? "close" : "add"}</span>
           {showForm ? "Cancel" : "New Announcement"}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
-        <div className="bg-[#101827] border border-[#F6B32B]/20 rounded-2xl p-6 mb-6">
-          <h2 className="text-base font-bold text-white mb-4">Compose</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5 block">Title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Announcement title…" className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40" />
+        <Card className="animate-in slide-in-from-top-4 duration-300">
+          <CardContent className="p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-6">Compose Announcement</h2>
+            <div className="space-y-6">
+              <div>
+                <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">Title <span className="text-red-500">*</span></Label>
+                <Input 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  placeholder="e.g. System Maintenance This Weekend" 
+                />
+              </div>
+              <div>
+                <Label className="mb-2 block text-xs tracking-widest uppercase text-gray-500">Content <span className="text-red-500">*</span></Label>
+                <textarea 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  rows={6} 
+                  placeholder="Write your message here..." 
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all resize-y text-sm" 
+                />
+              </div>
+              
+              <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div className="flex items-center h-5">
+                  <input 
+                    id="sendEmail" 
+                    type="checkbox" 
+                    checked={sendEmail} 
+                    onChange={(e) => setSendEmail(e.target.checked)} 
+                    className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500" 
+                  />
+                </div>
+                <label htmlFor="sendEmail" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Also send an email notification to all students
+                </label>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button onClick={handlePost} disabled={isPosting} isLoading={isPosting}>
+                  {!isPosting && <span className="material-symbols-outlined mr-2">campaign</span>}
+                  Publish Now
+                </Button>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-bold text-white/40 uppercase tracking-wider mb-1.5 block">Content</label>
-              <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} placeholder="Write your message…" className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40 resize-none" />
-            </div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="w-4 h-4 accent-[#F6B32B]" />
-              <span className="text-sm text-white/60">Also send email to all students</span>
-            </label>
-            <button onClick={handlePost} disabled={isPosting} className="px-6 py-2.5 bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2">
-              {isPosting ? <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" /> : <span className="material-symbols-outlined text-[18px]">campaign</span>}
-              {isPosting ? "Publishing…" : "Publish Now"}
-            </button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {isLoading ? (
-        <div className="min-h-[40vh] flex items-center justify-center"><div className="w-10 h-10 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" /></div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center h-64">
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4" />
+            <p className="text-sm font-medium text-gray-500">Loading announcements...</p>
+          </CardContent>
+        </Card>
       ) : announcements.length === 0 ? (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-14 text-center">
-          <span className="material-symbols-outlined text-white/20 text-5xl block mb-3">campaign</span>
-          <p className="text-white/40 text-sm">No announcements yet</p>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-gray-400">
+              <span className="material-symbols-outlined text-[32px]">campaign</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">No Announcements</h3>
+            <p className="text-sm text-gray-500 max-w-sm">Use the New Announcement button to broadcast a message to your users.</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-4">
           {announcements.map((ann) => (
-            <div key={ann.id} className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 hover:border-white/10 transition-all">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${ann.role === "admin" ? "bg-[#F6B32B]/15 text-[#F6B32B]" : "bg-blue-500/15 text-blue-400"}`}>{ann.role}</span>
-                    <span className="text-[11px] text-white/30">{new Date(ann.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
+            <Card key={ann.id} className="hover:border-blue-300 hover:shadow-sm transition-all group">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge variant={ann.role === "admin" ? "primary" : "secondary"} className="uppercase tracking-wider text-[10px]">
+                        {ann.role}
+                      </Badge>
+                      <span className="text-xs font-medium text-gray-400">
+                        {new Date(ann.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">{ann.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                    
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                      </div>
+                      <p className="text-xs font-medium text-gray-500">{ann.author_name}</p>
+                    </div>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">{ann.title}</h3>
-                  <p className="text-sm text-white/50 leading-relaxed whitespace-pre-wrap">{ann.content}</p>
-                  <p className="text-[11px] text-white/25 mt-3">— {ann.author_name}</p>
+                  
+                  <button 
+                    onClick={() => handleDelete(ann.id)} 
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-600 hover:bg-red-50 transition-all shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title="Delete Announcement"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
                 </div>
-                <button onClick={() => handleDelete(ann.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                  <span className="material-symbols-outlined text-[18px]">delete</span>
-                </button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
