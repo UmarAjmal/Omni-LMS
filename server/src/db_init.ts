@@ -261,14 +261,29 @@ async function initDB() {
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
         type VARCHAR(100) NOT NULL,
+        category VARCHAR(100) DEFAULT 'System',
         title VARCHAR(255) NOT NULL,
         message TEXT,
         priority VARCHAR(50) DEFAULT 'normal',
         action_url VARCHAR(500),
         attachment_url VARCHAR(500),
         created_by INT REFERENCES users(id) ON DELETE SET NULL,
+        expires_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+    
+    // Add columns if they don't exist (for existing databases)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='notifications' AND column_name='category') THEN
+          ALTER TABLE notifications ADD COLUMN category VARCHAR(100) DEFAULT 'System';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='notifications' AND column_name='expires_at') THEN
+          ALTER TABLE notifications ADD COLUMN expires_at TIMESTAMP;
+        END IF;
+      END $$;
     `);
     console.log('✅ "notifications" table verified successfully!');
 
@@ -312,6 +327,53 @@ async function initDB() {
       )
     `);
     console.log('✅ "user_fcm_tokens" table verified successfully!');
+
+    // 24. admin_settings
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_settings (
+        id SERIAL PRIMARY KEY,
+        settings JSONB NOT NULL DEFAULT '{}',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Initialize default admin settings if empty
+    const settingsCheck = await pool.query('SELECT COUNT(*) FROM admin_settings');
+    if (parseInt(settingsCheck.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO admin_settings (settings) 
+        VALUES ($1)
+      `, [JSON.stringify({
+        pushEnabled: true,
+        emailEnabled: true,
+        inAppEnabled: true,
+        categories: {
+          assignment: true,
+          announcement: true,
+          lead: true,
+          system: true
+        },
+        smtp: {},
+        firebase: {}
+      })]);
+    }
+    console.log('✅ "admin_settings" table verified successfully!');
+
+    // 25. email_queue
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS email_queue (
+        id SERIAL PRIMARY KEY,
+        recipient VARCHAR(255) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        body TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        retry_count INT DEFAULT 0,
+        scheduled_for TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ "email_queue" table verified successfully!');
+
 
   } catch (err) {
     console.error('❌ Error during database schema initialization:', err);

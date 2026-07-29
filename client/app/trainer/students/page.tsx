@@ -4,6 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
 
 
 interface Student {
@@ -79,102 +83,112 @@ export default function TrainerStudentsPage() {
   const programs = Array.from(new Set(students.map((s) => s.program).filter(Boolean)));
 
   const getGradeColor = (score?: number) => {
-    if (!score) return "text-white/30";
-    if (score >= 80) return "text-emerald-400";
-    if (score >= 60) return "text-[#F6B32B]";
-    return "text-red-400";
+    if (!score) return "text-gray-400 font-medium";
+    if (score >= 80) return "text-emerald-600 font-black";
+    if (score >= 60) return "text-blue-600 font-bold";
+    return "text-red-500 font-bold";
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Students</h1>
-        <p className="text-white/40 text-sm">{students.length} enrolled students</p>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="Students" 
+        description={`${students.length} enrolled students`} 
+        icon="groups"
+      />
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-2.5 text-white/30 text-[18px]">search</span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, ID, or email…"
-            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40"
-          />
-        </div>
-        <select
-          value={programFilter}
-          onChange={(e) => setProgramFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-[#F6B32B]/40"
-        >
-          <option value="all">All Programs</option>
-          {programs.map((p) => (
-            <option key={p} value={p}>{PROGRAM_LABELS[p] || p}</option>
-          ))}
-        </select>
-      </div>
+      <Card className="bg-gray-50/50 border-gray-200 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3 top-3 text-gray-400 text-[20px]">search</span>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, ID, or email…"
+                className="pl-10"
+              />
+            </div>
+            <select
+              value={programFilter}
+              onChange={(e) => setProgramFilter(e.target.value)}
+              className="flex h-11 w-full sm:w-64 items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Programs</option>
+              {programs.map((p) => (
+                <option key={p} value={p}>{PROGRAM_LABELS[p] || p}</option>
+              ))}
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
-        <div className="min-h-[40vh] flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+          <p className="text-gray-500 font-medium text-sm">Loading students...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-14 text-center">
-          <span className="material-symbols-outlined text-white/20 text-5xl block mb-3">group</span>
-          <p className="text-white/40 text-sm">No students found</p>
-        </div>
+        <Card className="border-dashed border-2 bg-gray-50/50">
+          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-gray-300">
+              <span className="material-symbols-outlined text-[32px]">group_off</span>
+            </div>
+            <p className="text-gray-500 font-medium">No students found matching your filters.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-3 border-b border-white/[0.06] text-[11px] font-bold uppercase tracking-wider text-white/30">
+        <Card className="overflow-hidden shadow-sm">
+          <div className="hidden md:grid grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-4 bg-gray-50 border-b border-gray-100 text-[11px] font-bold uppercase tracking-wider text-gray-500">
             <span>Student</span>
             <span>Program</span>
             <span>Tasks</span>
             <span>Avg Score</span>
             <span>Contact</span>
           </div>
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-gray-100">
             {filtered.map((student) => (
-              <div key={student.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#1E2A3B] flex items-center justify-center shrink-0 border border-white/[0.06] overflow-hidden">
+              <div key={student.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr_1fr_1fr_1fr] gap-4 px-6 py-5 hover:bg-blue-50/30 transition-colors items-center group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
                     {student.avatar_url ? (
-                      <img src={student.avatar_url} className="w-full h-full object-cover" alt="" />
+                      <img src={student.avatar_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="" />
                     ) : (
-                      <span className="text-white/50 font-bold">{(student.first_name || "?")[0]}</span>
+                      <span className="text-gray-500 font-bold text-lg">{(student.first_name || "?")[0]}</span>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{student.first_name} {student.last_name}</p>
-                    <p className="text-[11px] text-white/30 truncate">{student.enrollment_id}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{student.first_name} {student.last_name}</p>
+                    <p className="text-[11px] font-medium text-gray-500 truncate mt-0.5">{student.enrollment_id}</p>
                   </div>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F6B32B]/10 text-[#F6B32B]">
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 uppercase tracking-wider text-[10px]">
                     {PROGRAM_LABELS[student.program] || student.program || "—"}
-                  </span>
+                  </Badge>
                 </div>
-                <div className="text-sm text-white/60">
-                  <span className="font-bold text-white">{student.graded_tasks ?? "—"}</span>
-                  {student.total_tasks != null && <span className="text-white/30"> / {student.total_tasks}</span>}
+                <div className="text-sm text-gray-600">
+                  <span className="font-bold text-gray-900">{student.graded_tasks ?? "—"}</span>
+                  {student.total_tasks != null && <span className="text-gray-400 font-medium"> / {student.total_tasks}</span>}
                 </div>
                 <div>
-                  <span className={`text-sm font-bold ${getGradeColor(student.avg_score)}`}>
+                  <span className={`text-sm ${getGradeColor(student.avg_score)}`}>
                     {student.avg_score != null ? `${student.avg_score}%` : "—"}
                   </span>
                 </div>
                 <div>
                   {student.email && (
-                    <a href={`mailto:${student.email}`} className="text-xs text-blue-400 hover:underline flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">mail</span>
-                      <span className="truncate max-w-[120px]">{student.email}</span>
+                    <a href={`mailto:${student.email}`} className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1.5 transition-colors">
+                      <span className="material-symbols-outlined text-[16px]">mail</span>
+                      <span className="truncate max-w-[150px] font-medium">{student.email}</span>
                     </a>
                   )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

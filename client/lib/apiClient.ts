@@ -10,15 +10,30 @@ export async function apiClient(url: string, options: RequestInit = {}): Promise
     token = localStorage.getItem("lms_token");
   }
 
-  const headers = new Headers(options.headers || {});
+  const headers: Record<string, string> = {};
+  
+  // Copy options.headers if they exist
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        headers[key] = value;
+      });
+    } else {
+      Object.assign(headers, options.headers);
+    }
+  }
   
   if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Set default Content-Type to JSON if not specified and body is not FormData
-  if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
+  if (!headers["Content-Type"] && !headers["content-type"] && !(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
   }
 
   const fetchOptions: RequestInit = {

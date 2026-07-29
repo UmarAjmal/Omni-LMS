@@ -4,7 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Input, Label } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export default function TrainerProfilePage() {
   const router = useRouter();
@@ -101,107 +105,117 @@ export default function TrainerProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
+        <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">My Profile</h1>
-        <p className="text-white/40 text-sm">Manage your trainer account information</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <PageHeader 
+        title="My Profile" 
+        description="Manage your trainer account information"
+        icon="person"
+      />
 
       {/* Avatar + basic info */}
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 mb-6">
-        <h2 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-5">Profile Info</h2>
-        {/* Avatar */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-20 h-20 rounded-full bg-[#1E2A3B] border-2 border-[#F6B32B]/20 overflow-hidden flex items-center justify-center shrink-0">
-            {avatarUrl ? (
-              <img src={avatarUrl} className="w-full h-full object-cover" alt="avatar" />
-            ) : (
-              <span className="material-symbols-outlined text-[#F6B32B] text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
-            )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Info</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Avatar */}
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 rounded-full bg-blue-50 border-2 border-blue-100 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
+              {avatarUrl ? (
+                <img src={avatarUrl} className="w-full h-full object-cover" alt="avatar" />
+              ) : (
+                <span className="material-symbols-outlined text-blue-600 text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xl font-bold text-gray-900">{firstName} {lastName}</p>
+              <p className="text-sm text-gray-500">{email}</p>
+              <Badge variant="primary" className="mt-2 text-[10px]">TRAINER</Badge>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-lg font-bold text-white">{firstName} {lastName}</p>
-            <p className="text-sm text-white/40">{email}</p>
-            <span className="inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 uppercase tracking-wide">Trainer</span>
-          </div>
-        </div>
-        <div className="space-y-4">
-          {/* Read-only fields */}
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-white/30 uppercase tracking-wider mb-1 block">Employee ID</label>
-              <div className="px-4 py-2.5 bg-white/[0.02] border border-white/[0.06] rounded-xl text-sm text-white/40">{employeeId || "—"}</div>
+              <Label className="mb-1 block text-xs tracking-widest text-gray-400 uppercase">Employee ID</Label>
+              <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 font-medium">{employeeId || "—"}</div>
             </div>
             <div>
-              <label className="text-xs font-bold text-white/30 uppercase tracking-wider mb-1 block">Department</label>
-              <div className="px-4 py-2.5 bg-white/[0.02] border border-white/[0.06] rounded-xl text-sm text-white/40">{department || "—"}</div>
+              <Label className="mb-1 block text-xs tracking-widest text-gray-400 uppercase">Department</Label>
+              <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 font-medium">{department || "—"}</div>
             </div>
           </div>
+          
           {/* Editable fields */}
           <div>
-            <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5 block">Phone Number</label>
-            <input
+            <Label className="mb-1 block text-xs tracking-widest text-gray-400 uppercase">Phone Number</Label>
+            <Input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+92 300 0000000"
-              className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40"
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5 block">Avatar URL</label>
-            <input
+            <Label className="mb-1 block text-xs tracking-widest text-gray-400 uppercase">Avatar URL</Label>
+            <Input
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="https://example.com/avatar.jpg"
-              className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40"
             />
           </div>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="w-full py-2.5 bg-gradient-to-r from-[#F6B32B] to-[#E09B18] text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isSaving ? <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" /> : <span className="material-symbols-outlined text-[18px]">save</span>}
-            {isSaving ? "Saving…" : "Save Changes"}
-          </button>
-        </div>
-      </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              isLoading={isSaving}
+            >
+              {!isSaving && <span className="material-symbols-outlined mr-2">save</span>}
+              Save Changes
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Change Password */}
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6">
-        <h2 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-5">Change Password</h2>
-        <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {[
             { label: "Current Password", value: currentPassword, setter: setCurrentPassword },
             { label: "New Password", value: newPassword, setter: setNewPassword },
             { label: "Confirm New Password", value: confirmPassword, setter: setConfirmPassword },
           ].map(({ label, value, setter }) => (
             <div key={label}>
-              <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-1.5 block">{label}</label>
-              <input
+              <Label className="mb-1 block text-xs tracking-widest text-gray-400 uppercase">{label}</Label>
+              <Input
                 type="password"
                 value={value}
                 onChange={(e) => setter(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#F6B32B]/40"
               />
             </div>
           ))}
-          <button
-            onClick={handleChangePassword}
-            disabled={isChangingPassword}
-            className="w-full py-2.5 bg-white/[0.06] hover:bg-white/[0.1] text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-white/[0.08]"
-          >
-            {isChangingPassword ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <span className="material-symbols-outlined text-[18px]">lock</span>}
-            {isChangingPassword ? "Changing…" : "Change Password"}
-          </button>
-        </div>
-      </div>
+          
+          <div className="flex justify-end pt-4">
+            <Button
+              variant="outline"
+              onClick={handleChangePassword}
+              disabled={isChangingPassword}
+              isLoading={isChangingPassword}
+            >
+              {!isChangingPassword && <span className="material-symbols-outlined mr-2">lock</span>}
+              Change Password
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

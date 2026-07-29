@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
-
+import { Card, CardContent } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 interface AttendanceRecord {
   id: number;
@@ -23,10 +26,10 @@ interface AttendanceStats {
 }
 
 const STATUS_CONFIG = {
-  present: { color: "text-emerald-400", bg: "bg-emerald-500", icon: "check_circle", label: "Present" },
-  absent: { color: "text-red-400", bg: "bg-red-500", icon: "cancel", label: "Absent" },
-  late: { color: "text-orange-400", bg: "bg-orange-500", icon: "schedule", label: "Late" },
-  leave: { color: "text-blue-400", bg: "bg-blue-500", icon: "event_busy", label: "Leave" },
+  present: { color: "text-green-600", bg: "bg-green-100", icon: "check_circle", label: "Present" },
+  absent: { color: "text-red-600", bg: "bg-red-100", icon: "cancel", label: "Absent" },
+  late: { color: "text-orange-600", bg: "bg-orange-100", icon: "schedule", label: "Late" },
+  leave: { color: "text-blue-600", bg: "bg-blue-100", icon: "event_busy", label: "Leave" },
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -70,25 +73,27 @@ export default function StudentAttendancePage() {
   const recordMap = Object.fromEntries(records.map((r) => [new Date(r.date).getDate(), r]));
 
   const AttendanceStat = ({ label, count, pct, status }: { label: string; count: number; pct?: number; status: keyof typeof STATUS_CONFIG }) => (
-    <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-5">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${STATUS_CONFIG[status].bg}/15`}>
-        <span className={`material-symbols-outlined text-[20px] ${STATUS_CONFIG[status].color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{STATUS_CONFIG[status].icon}</span>
-      </div>
-      <p className={`text-3xl font-bold ${STATUS_CONFIG[status].color}`}>{pct != null ? `${pct}%` : count}</p>
-      <p className="text-xs text-white/40 uppercase tracking-wider mt-1">{label}</p>
-      {pct != null && <p className="text-[11px] text-white/25 mt-0.5">{count} days</p>}
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${STATUS_CONFIG[status].bg}`}>
+          <span className={`material-symbols-outlined text-[24px] ${STATUS_CONFIG[status].color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{STATUS_CONFIG[status].icon}</span>
+        </div>
+        <p className={`text-3xl font-black ${STATUS_CONFIG[status].color} mb-1`}>{pct != null ? `${pct}%` : count}</p>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</p>
+        {pct != null && <p className="text-[11px] font-medium text-gray-400 mt-1">{count} days</p>}
+      </CardContent>
+    </Card>
   );
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">My Attendance</h1>
-        <p className="text-white/40 text-sm">Track your attendance history and stats</p>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      <PageHeader 
+        title="My Attendance" 
+        description="Track your attendance history and stats"
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <AttendanceStat label="Attendance Rate" count={stats?.present ?? 0} pct={stats?.attendancePercent} status="present" />
         <AttendanceStat label="Present" count={stats?.present ?? 0} status="present" />
         <AttendanceStat label="Absent" count={stats?.absent ?? 0} status="absent" />
@@ -96,111 +101,128 @@ export default function StudentAttendancePage() {
       </div>
 
       {/* Month Picker */}
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => {
-          if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(y => y - 1); }
-          else setSelectedMonth(m => m - 1);
-        }} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.08] transition-all">
-          <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-        </button>
-        <p className="text-base font-bold text-white min-w-[140px] text-center">
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="w-10 h-10 p-0"
+          onClick={() => {
+            if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(y => y - 1); }
+            else setSelectedMonth(m => m - 1);
+          }}
+        >
+          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+        </Button>
+        <p className="text-base font-bold text-gray-900 min-w-[140px] text-center">
           {MONTHS[selectedMonth - 1]} {selectedYear}
         </p>
-        <button onClick={() => {
-          if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear(y => y + 1); }
-          else setSelectedMonth(m => m + 1);
-        }} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.08] transition-all">
-          <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-        </button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="w-10 h-10 p-0"
+          onClick={() => {
+            if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear(y => y + 1); }
+            else setSelectedMonth(m => m + 1);
+          }}
+        >
+          <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+        </Button>
       </div>
 
       {/* Calendar */}
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6 mb-6">
-        <div className="grid grid-cols-7 gap-1 mb-3">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d} className="text-center text-[11px] font-bold text-white/30 uppercase py-1">{d}</div>
-          ))}
-        </div>
-        {isLoading ? (
-          <div className="h-40 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-2 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-              <div key={`empty-${i}`} />
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-7 gap-2 mb-4">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+              <div key={d} className="text-center text-xs font-bold text-gray-400 uppercase tracking-wider py-1">{d}</div>
             ))}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const record = recordMap[day];
-              const isToday = day === today.getDate() && selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
-              return (
-                <div
-                  key={day}
-                  title={record ? STATUS_CONFIG[record.status as keyof typeof STATUS_CONFIG]?.label : "No record"}
-                  className={`aspect-square flex items-center justify-center rounded-xl text-xs font-semibold transition-all relative ${
-                    record
-                      ? record.status === "present" ? "bg-emerald-500/15 text-emerald-400"
-                      : record.status === "absent" ? "bg-red-500/15 text-red-400"
-                      : record.status === "late" ? "bg-orange-500/15 text-orange-400"
-                      : "bg-blue-500/15 text-blue-400"
-                      : isToday ? "bg-[#F6B32B]/10 text-[#F6B32B] ring-1 ring-[#F6B32B]/30"
-                      : "text-white/30 hover:bg-white/5"
-                  }`}
-                >
-                  {day}
-                  {record && (
-                    <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${STATUS_CONFIG[record.status as keyof typeof STATUS_CONFIG]?.bg}`} />
-                  )}
-                </div>
-              );
-            })}
           </div>
-        )}
-      </div>
+          {isLoading ? (
+            <div className="h-48 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-2">
+              {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                <div key={`empty-${i}`} />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const record = recordMap[day];
+                const isToday = day === today.getDate() && selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
+                return (
+                  <div
+                    key={day}
+                    title={record ? STATUS_CONFIG[record.status as keyof typeof STATUS_CONFIG]?.label : "No record"}
+                    className={`aspect-square flex items-center justify-center rounded-xl text-sm font-bold transition-all relative ${
+                      record
+                        ? record.status === "present" ? "bg-green-50 text-green-700"
+                        : record.status === "absent" ? "bg-red-50 text-red-700"
+                        : record.status === "late" ? "bg-orange-50 text-orange-700"
+                        : "bg-blue-50 text-blue-700"
+                        : isToday ? "bg-blue-50 text-blue-700 ring-2 ring-blue-500"
+                        : "text-gray-500 hover:bg-gray-50 border border-gray-100"
+                    }`}
+                  >
+                    {day}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Legend */}
-      <div className="flex gap-4 flex-wrap mb-6">
+      <div className="flex gap-6 flex-wrap">
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <div key={key} className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full ${cfg.bg}`} />
-            <span className="text-xs text-white/50">{cfg.label}</span>
+            <span className="text-sm font-medium text-gray-600">{cfg.label}</span>
           </div>
         ))}
       </div>
 
       {/* History Table */}
-      <div className="bg-[#101827] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/[0.06]">
-          <h2 className="text-base font-bold text-white">Attendance History</h2>
+      <Card>
+        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="text-base font-bold text-gray-900">Attendance History</h2>
         </div>
         {records.length === 0 ? (
-          <div className="p-10 text-center">
-            <span className="material-symbols-outlined text-white/20 text-4xl block mb-2">event_available</span>
-            <p className="text-white/30 text-sm">No attendance records for this month</p>
+          <div className="p-16 text-center flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-gray-300 text-4xl">event_available</span>
+            </div>
+            <p className="text-gray-500 font-medium">No attendance records for this month</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-gray-100">
             {[...records].reverse().map((record) => {
               const cfg = STATUS_CONFIG[record.status];
               return (
-                <div key={record.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-white/[0.02] transition-colors">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${cfg.bg}/15 shrink-0`}>
-                    <span className={`material-symbols-outlined text-[16px] ${cfg.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                <div key={record.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg.bg} shrink-0`}>
+                    <span className={`material-symbols-outlined text-[20px] ${cfg.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-bold text-gray-900">
                       {new Date(record.date).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     </p>
-                    {record.notes && <p className="text-[11px] text-white/30 mt-0.5">{record.notes}</p>}
+                    {record.notes && <p className="text-[12px] font-medium text-gray-500 mt-0.5">{record.notes}</p>}
                   </div>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg.bg}/15 ${cfg.color}`}>{cfg.label}</span>
+                  <Badge variant={
+                    record.status === 'present' ? 'success' : 
+                    record.status === 'absent' ? 'danger' : 
+                    record.status === 'late' ? 'warning' : 'primary'
+                  }>
+                    {cfg.label}
+                  </Badge>
                 </div>
               );
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import NotificationBell from "./NotificationBell";
+import { NotificationCenter } from "./NotificationCenter";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
 
@@ -30,23 +30,23 @@ function NavLink({
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group relative ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 group relative ${
         active
-          ? "bg-[#F6B32B]/10 text-[#F6B32B] border border-[#F6B32B]/20 shadow-[0_0_12px_rgba(246,179,43,0.08)]"
-          : "text-white/50 hover:text-white hover:bg-white/5"
+          ? "bg-white/10 text-white font-medium"
+          : "text-slate-400 hover:text-white hover:bg-white/5"
       }`}
     >
       <span
         className={`material-symbols-outlined text-[20px] transition-all ${
-          active ? "text-[#F6B32B]" : "group-hover:text-white/80"
+          active ? "text-white" : "text-slate-400 group-hover:text-slate-300"
         }`}
         style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
       >
         {icon}
       </span>
-      <span className="text-sm font-semibold tracking-tight">{label}</span>
+      <span className="text-sm tracking-tight">{label}</span>
       {badge != null && badge > 0 && (
-        <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+        <span className="ml-auto bg-gray-900 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
@@ -56,7 +56,7 @@ function NavLink({
 
 function NavSection({ label }: { label: string }) {
   return (
-    <p className="px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white/25">
+    <p className="px-3 pt-4 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
       {label}
     </p>
   );
@@ -75,18 +75,12 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [pendingAdmissions, setPendingAdmissions] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState("User");
 
   const closeMobile = () => setIsMobileMenuOpen(false);
 
-  // ── fetch notifications (Removed, handled by NotificationProvider)
-
-  // ── fetch pending admissions count (admin only)
   const fetchPendingCount = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/training-applications/count`);
@@ -95,37 +89,34 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
     } catch {}
   }, []);
 
-  // ── mark all read (Removed, handled by NotificationProvider)
-
-  // ── auth guard + role routing
   useEffect(() => {
     const auth = localStorage.getItem("lms_auth") === "true";
     const role = localStorage.getItem("lms_user_role");
     const uid = localStorage.getItem("lms_user_id");
-    setIsAuthenticated(auth);
-    setUserRole(role);
-    setUserId(uid);
 
     const isPublicRoute =
       pathname === "/" ||
       pathname.startsWith("/signup") ||
       pathname.startsWith("/apply") ||
-      pathname.startsWith("/login");
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/change-password");
 
     if (auth) {
-      const mustChange = localStorage.getItem("lms_must_change_password") === "true";
-      if (mustChange && pathname !== "/change-password") {
-        router.push("/change-password");
-        return;
-      }
+      setIsAuthenticated(true);
+      setUserRole(role);
+      setUserId(uid);
 
       if (role === "student") {
         const studentStr = localStorage.getItem("lms_student_info");
-        const hasStudentInfo =
-          studentStr && studentStr !== "undefined" && studentStr !== "null";
+        const hasStudentInfo = studentStr && studentStr !== "undefined" && studentStr !== "null";
 
+        const lmsToken = localStorage.getItem("lms_token");
         if (!hasStudentInfo && uid) {
-          fetch(`${API_BASE_URL}/api/students/profile?userId=${uid}`)
+          fetch(`${API_BASE_URL}/api/students/profile?userId=${uid}`, {
+            headers: {
+              "Authorization": lmsToken ? `Bearer ${lmsToken}` : ""
+            }
+          })
             .then((r) => r.json())
             .then((res) => {
               if (res.success && res.data) {
@@ -138,11 +129,9 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               }
             })
             .catch(() => {});
-        }
-
-        try {
-          if (hasStudentInfo) {
-            const student = JSON.parse(studentStr!);
+        } else if (hasStudentInfo) {
+          try {
+            const student = JSON.parse(studentStr);
             setDisplayName(`${student.first_name || ""} ${student.last_name || ""}`.trim());
             setAvatarUrl(student.avatar_url || null);
             const isComplete =
@@ -153,8 +142,8 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               student.university?.trim() &&
               student.semester;
             setProfileIncomplete(!isComplete);
-          }
-        } catch {}
+          } catch {}
+        }
 
         if (!pathname.startsWith("/student/") && !pathname.startsWith("/dashboard/leaderboard") && !isPublicRoute && pathname !== "/change-password") {
           router.push("/student/dashboard");
@@ -162,17 +151,13 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         }
       } else if (role === "trainer") {
         setProfileIncomplete(false);
-        if (pathname.startsWith("/student/") || (pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/campaigns") && !pathname.startsWith("/dashboard/leads") && !pathname.startsWith("/dashboard/leaderboard"))) {
-          router.push("/trainer/dashboard");
-          return;
-        }
-        if (!pathname.startsWith("/trainer/") && !pathname.startsWith("/tasks") && !pathname.startsWith("/dashboard/campaigns") && !pathname.startsWith("/dashboard/leads") && !pathname.startsWith("/dashboard/leaderboard") && !isPublicRoute && pathname !== "/change-password") {
-          router.push("/trainer/dashboard");
-          return;
-        }
-        // Fetch trainer profile for display name + avatar
+        const lmsToken = localStorage.getItem("lms_token");
         if (uid) {
-          fetch(`${API_BASE_URL}/api/trainers/profile?userId=${uid}`)
+          fetch(`${API_BASE_URL}/api/trainers/profile?userId=${uid}`, {
+            headers: {
+              "Authorization": lmsToken ? `Bearer ${lmsToken}` : ""
+            }
+          })
             .then((r) => r.json())
             .then((res) => {
               if (res.success && res.data) {
@@ -182,8 +167,11 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
             })
             .catch(() => {});
         }
+        if (!pathname.startsWith("/trainer/") && !pathname.startsWith("/tasks") && !pathname.startsWith("/dashboard/campaigns") && !pathname.startsWith("/dashboard/leads") && !pathname.startsWith("/dashboard/leaderboard") && !isPublicRoute && pathname !== "/change-password") {
+          router.push("/trainer/dashboard");
+          return;
+        }
       } else {
-        // Admin
         setProfileIncomplete(false);
         setDisplayName("Admin");
         if (pathname.startsWith("/student/") || pathname.startsWith("/trainer/")) {
@@ -199,9 +187,6 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         else router.push("/dashboard");
         return;
       }
-
-      // Fetch notifications for all authenticated users
-      // (Notifications fetch removed)
       setIsCheckingAuth(false);
     } else {
       setProfileIncomplete(false);
@@ -214,11 +199,9 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
     }
   }, [pathname, router, fetchPendingCount]);
 
-  // Poll notifications every 30 seconds
   useEffect(() => {
     if (!userId || !isAuthenticated) return;
     const interval = setInterval(() => {
-      // (Notifications fetch removed)
       if (userRole === "admin") fetchPendingCount();
     }, 30000);
     return () => clearInterval(interval);
@@ -226,25 +209,17 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    localStorage.removeItem("lms_token");
-    localStorage.removeItem("lms_auth");
-    localStorage.removeItem("lms_user_role");
-    localStorage.removeItem("lms_user_id");
-    localStorage.removeItem("lms_student_info");
+    localStorage.clear();
     toast.success("Logged out successfully.");
     router.push("/");
   };
 
   if (isCheckingAuth) {
     return (
-      <div className="fixed inset-0 bg-[#090D16] flex flex-col items-center justify-center z-50">
+      <div className="fixed inset-0 bg-[#FAFAFA] flex flex-col items-center justify-center z-50">
         <div className="relative mb-6">
-          <div className="w-16 h-16 rounded-full border-4 border-[#F6B32B]/20 border-t-[#F6B32B] animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#F6B32B] text-2xl">bolt</span>
-          </div>
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
         </div>
-        <p className="text-white/40 font-light text-sm tracking-wide">Authenticating session…</p>
       </div>
     );
   }
@@ -258,40 +233,34 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
   if (isPublicRoute) return <>{children}</>;
 
-  // ─── Sidebar content by role ───────────────────────────────────────────
   const renderSidebar = () => {
     if (userRole === "student") {
       return (
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar pb-4">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar pb-4">
           <NavSection label="Main" />
-          <NavLink href="/student/dashboard" icon="grid_view" label="Dashboard" active={pathname === "/student/dashboard"} onClick={closeMobile} />
+          <NavLink href="/student/dashboard" icon="home" label="Overview" active={pathname === "/student/dashboard"} onClick={closeMobile} />
           <NavSection label="Learning" />
-          <NavLink href="/student/campaigns" icon="radar" label="Lead Campaigns" active={pathname.startsWith("/student/campaigns")} onClick={closeMobile} />
-          <NavLink href="/student/tasks" icon="assignment" label="My Tasks" active={pathname === "/student/tasks"} onClick={closeMobile} />
+          <NavLink href="/student/campaigns" icon="radar" label="Campaigns" active={pathname.startsWith("/student/campaigns")} onClick={closeMobile} />
+          <NavLink href="/student/tasks" icon="assignment" label="Tasks" active={pathname === "/student/tasks"} onClick={closeMobile} />
           <NavLink href="/student/submit-task" icon="upload" label="Submit Task" active={pathname === "/student/submit-task"} onClick={closeMobile} />
-          <NavLink href="/student/performance" icon="trending_up" label="Performance" active={pathname === "/student/performance"} onClick={closeMobile} />
-          <NavLink href="/dashboard/leaderboard" icon="social_leaderboard" label="Leaderboard" active={pathname.startsWith("/dashboard/leaderboard")} onClick={closeMobile} />
-          <NavSection label="Records" />
-          <NavLink href="/student/attendance" icon="event_available" label="Attendance" active={pathname === "/student/attendance"} onClick={closeMobile} />
-          <NavLink href="/student/announcements" icon="campaign" label="Announcements" active={pathname === "/student/announcements"} onClick={closeMobile} />
-          <NavSection label="Finance" />
-          <NavLink href="/student/fees" icon="payments" label="My Fees" active={pathname === "/student/fees"} onClick={closeMobile} />
-          
+          <NavLink href="/dashboard/leaderboard" icon="leaderboard" label="Leaderboard" active={pathname === "/dashboard/leaderboard"} onClick={closeMobile} />
           <NavSection label="Account" />
+          <NavLink href="/student/attendance" icon="calendar_today" label="Attendance" active={pathname === "/student/attendance"} onClick={closeMobile} />
+          <NavLink href="/student/fees" icon="payments" label="Fee Status" active={pathname === "/student/fees"} onClick={closeMobile} />
           <NavLink href="/student/profile" icon="person" label="My Profile" active={pathname === "/student/profile"} onClick={closeMobile} />
+          <NavLink href="/student/announcements" icon="campaign" label="Announcements" active={pathname === "/student/announcements"} onClick={closeMobile} />
         </nav>
       );
     }
-
     if (userRole === "trainer") {
       return (
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar pb-4">
-          <NavSection label="Main" />
-          <NavLink href="/trainer/dashboard" icon="grid_view" label="Dashboard" active={pathname === "/trainer/dashboard"} onClick={closeMobile} />
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar pb-4">
+          <NavSection label="Overview" />
+          <NavLink href="/trainer/dashboard" icon="home" label="Overview" active={pathname === "/trainer/dashboard"} onClick={closeMobile} />
           <NavSection label="Business & Tasks" />
           <NavLink href="/dashboard/campaigns" icon="radar" label="Lead Campaigns" active={pathname.startsWith("/dashboard/campaigns")} onClick={closeMobile} />
           <NavLink href="/dashboard/leads" icon="fact_check" label="Review Leads" active={pathname.startsWith("/dashboard/leads")} onClick={closeMobile} />
-          <NavLink href="/dashboard/leaderboard" icon="social_leaderboard" label="Leaderboard" active={pathname === "/dashboard/leaderboard"} onClick={closeMobile} />
+          <NavLink href="/dashboard/leaderboard" icon="leaderboard" label="Leaderboard" active={pathname === "/dashboard/leaderboard"} onClick={closeMobile} />
           <NavLink href="/tasks/new" icon="add_task" label="Assign Task" active={pathname === "/tasks/new"} onClick={closeMobile} />
           <NavLink href="/trainer/submitted-tasks" icon="inbox" label="Submitted Tasks" active={pathname === "/trainer/submitted-tasks"} onClick={closeMobile} />
           <NavSection label="Management" />
@@ -303,24 +272,23 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </nav>
       );
     }
-
     // Admin
     return (
-      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar pb-4">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar pb-4">
         <NavSection label="Overview" />
-        <NavLink href="/dashboard" icon="grid_view" label="Dashboard" active={pathname === "/dashboard"} onClick={closeMobile} />
+        <NavLink href="/dashboard" icon="home" label="Overview" active={pathname === "/dashboard"} onClick={closeMobile} />
         <NavSection label="People" />
         <NavLink href="/students" icon="school" label="Students" active={pathname.startsWith("/students") && !pathname.startsWith("/students/applicants")} onClick={closeMobile} />
         <NavLink href="/dashboard/trainers" icon="badge" label="Trainers" active={pathname === "/dashboard/trainers"} onClick={closeMobile} />
         <NavLink href="/students/applicants" icon="how_to_reg" label="Admissions" active={pathname === "/students/applicants"} badge={pendingAdmissions} onClick={closeMobile} />
         <NavSection label="Business & Content" />
-        <NavLink href="/dashboard/campaigns" icon="radar" label="Lead Campaigns" active={pathname.startsWith("/dashboard/campaigns")} onClick={closeMobile} />
-        <NavLink href="/dashboard/leads" icon="fact_check" label="Review Leads" active={pathname.startsWith("/dashboard/leads")} onClick={closeMobile} />
-        <NavLink href="/dashboard/leaderboard" icon="social_leaderboard" label="Leaderboard" active={pathname === "/dashboard/leaderboard"} onClick={closeMobile} />
-        <NavLink href="/tasks/new" icon="add_task" label="Assign Task" active={pathname === "/tasks/new"} onClick={closeMobile} />
+        <NavLink href="/dashboard/campaigns" icon="radar" label="Campaigns" active={pathname.startsWith("/dashboard/campaigns")} onClick={closeMobile} />
+        <NavLink href="/dashboard/leads" icon="fact_check" label="Leads" active={pathname.startsWith("/dashboard/leads")} onClick={closeMobile} />
+        <NavLink href="/dashboard/leaderboard" icon="leaderboard" label="Leaderboard" active={pathname === "/dashboard/leaderboard"} onClick={closeMobile} />
+        <NavLink href="/tasks/new" icon="add_task" label="Tasks" active={pathname === "/tasks/new"} onClick={closeMobile} />
         <NavLink href="/tasks/completed" icon="task_alt" label="Submissions" active={pathname === "/tasks/completed"} onClick={closeMobile} />
         <NavSection label="Finance" />
-        <NavLink href="/dashboard/fees" icon="account_balance_wallet" label="Fee Management" active={pathname === "/dashboard/fees"} onClick={closeMobile} />
+        <NavLink href="/dashboard/fees" icon="account_balance_wallet" label="Fees" active={pathname === "/dashboard/fees"} onClick={closeMobile} />
         <NavSection label="Analytics" />
         <NavLink href="/dashboard/reports" icon="bar_chart" label="Reports" active={pathname === "/dashboard/reports"} onClick={closeMobile} />
         <NavLink href="/dashboard/announcements" icon="campaign" label="Announcements" active={pathname === "/dashboard/announcements"} onClick={closeMobile} />
@@ -330,137 +298,111 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
     );
   };
 
-  // ─── Role badge ──────────────────────────────────────────────────────────
-  const roleBadge = {
-    admin: { label: "Administrator", color: "from-[#F6B32B] to-[#E09B18]", text: "text-black" },
-    trainer: { label: "Trainer", color: "from-blue-500 to-blue-700", text: "text-white" },
-    student: { label: "Student", color: "from-emerald-500 to-emerald-700", text: "text-white" },
-  }[userRole || "student"] || { label: "User", color: "from-gray-500 to-gray-700", text: "text-white" };
-
+  const roleLabel = userRole === "admin" ? "Administrator" : userRole === "trainer" ? "Trainer" : "Student";
   const homePath = userRole === "student" ? "/student/dashboard" : userRole === "trainer" ? "/trainer/dashboard" : "/dashboard";
 
   return (
     <>
-      {/* ── Top Header ──────────────────────────────────────────────────── */}
-      <header className="fixed top-0 right-0 left-0 z-50 flex justify-between items-center px-4 md:px-6 h-16 bg-[#090D16]/90 backdrop-blur-xl border-b border-white/[0.06]">
+      <header className="fixed top-0 right-0 left-0 md:left-64 z-40 flex justify-between items-center px-4 md:px-6 h-14 bg-white border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
-            className="md:hidden text-white/50 hover:text-white transition-colors"
+            className="md:hidden text-gray-500 hover:text-gray-900 transition-colors"
             onClick={() => setIsMobileMenuOpen(true)}
           >
-            <span className="material-symbols-outlined text-2xl">menu</span>
+            <span className="material-symbols-outlined text-xl">menu</span>
           </button>
-          <Link href={homePath} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#F6B32B] to-[#E09B18] flex items-center justify-center shadow-lg shadow-[#F6B32B]/20">
-              <span className="material-symbols-outlined text-black text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-            </div>
-            <span className="text-white font-bold text-base tracking-tight hidden sm:block">
-              Falcon Swift <span className="text-[#F6B32B]">LMS</span>
-            </span>
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative hidden lg:block">
+          
+          <div className="hidden lg:flex relative">
+            <span className="material-symbols-outlined absolute left-3 top-1.5 text-gray-400 text-[18px]">search</span>
             <input
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2 text-sm w-56 focus:outline-none focus:border-[#F6B32B]/40 transition-all text-white placeholder-white/25"
-              placeholder="Quick search…"
+              className="bg-gray-100 border border-transparent text-gray-900 placeholder-gray-500 focus:bg-white focus:border-gray-300 focus:ring-2 focus:ring-gray-100 rounded-lg pl-9 pr-4 py-1.5 text-sm w-64 focus:outline-none transition-all"
+              placeholder="Search..."
               type="text"
             />
-            <span className="material-symbols-outlined absolute right-3 top-2 text-white/30 text-[18px]">search</span>
           </div>
+        </div>
 
-          {/* Notification Bell */}
-          <NotificationBell />
-
-          {/* Avatar + Name */}
-          <div className="flex items-center gap-2 ml-1">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-[#F6B32B]/30 shrink-0 bg-[#1E2A3B]">
+        <div className="flex items-center gap-4">
+          <NotificationCenter />
+          <div className="h-4 w-px bg-gray-200"></div>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex flex-col text-right">
+              <span className="text-sm font-semibold text-gray-900 leading-tight">{displayName}</span>
+              <span className="text-xs text-gray-500 leading-tight">{roleLabel}</span>
+            </div>
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#F6B32B]/20 to-[#E09B18]/10">
-                  <span className="material-symbols-outlined text-[#F6B32B] text-base" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <span className="material-symbols-outlined text-gray-400 text-sm">person</span>
                 </div>
               )}
             </div>
-            <span className="hidden md:block text-sm font-semibold text-white/80 max-w-[120px] truncate">{displayName}</span>
           </div>
         </div>
       </header>
 
-      {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           onClick={closeMobile}
         />
       )}
 
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 flex flex-col pt-16 z-50 md:z-40 transition-transform duration-300 border-r border-white/[0.06] bg-[#090D16] ${
+        className={`fixed left-0 top-0 h-screen w-64 flex flex-col z-50 md:z-40 transition-transform duration-300 border-r border-slate-800 bg-[#0F172A] ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        {/* Close (mobile) */}
-        <button className="absolute top-5 right-4 md:hidden text-white/40 hover:text-white" onClick={closeMobile}>
-          <span className="material-symbols-outlined">close</span>
-        </button>
-
-        {/* Role badge */}
-        <div className="px-4 pt-5 pb-3">
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r ${roleBadge.color} ${roleBadge.text} text-[11px] font-bold uppercase tracking-wider`}>
-            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {userRole === "admin" ? "admin_panel_settings" : userRole === "trainer" ? "school" : "person"}
+        <div className="h-14 px-5 border-b border-slate-800 flex items-center justify-between">
+          <Link href={homePath} className="flex items-center gap-2" onClick={closeMobile}>
+            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-[14px]">bolt</span>
+            </div>
+            <span className="text-white font-bold tracking-tight">
+              Falcon LMS
             </span>
-            {roleBadge.label}
-          </div>
+          </Link>
+          <button className="md:hidden text-slate-400 hover:text-white" onClick={closeMobile}>
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
         </div>
 
-        {/* Navigation links */}
-        {renderSidebar()}
+        <div className="py-4 flex-1 overflow-hidden flex flex-col">
+          {renderSidebar()}
+        </div>
 
-        {/* Bottom: Logout */}
-        <div className="px-3 pb-6 pt-2 border-t border-white/[0.06]">
+        <div className="p-4 border-t border-slate-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/40 hover:text-red-400 hover:bg-red-500/5 transition-all text-sm font-semibold"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"
           >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            Logout
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            Sign Out
           </button>
         </div>
       </aside>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
-      <main className="md:ml-64 pt-16 min-h-screen relative z-10">
-        {/* Profile incomplete banner */}
+      <main className="md:ml-64 pt-14 min-h-screen relative z-10 flex flex-col">
         {profileIncomplete && (
-          <div className="mx-4 mt-4 p-4 bg-orange-500/10 border border-orange-500/25 rounded-2xl flex items-center gap-3 shadow-[0_4px_20px_rgba(249,115,22,0.1)]">
-            <span className="material-symbols-outlined text-orange-400 text-xl shrink-0">warning</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white">Profile Incomplete</p>
-              <p className="text-[11px] text-white/50 mt-0.5">Complete your profile to unlock all LMS features.</p>
+          <div className="px-6 py-3 bg-amber-50 border-b border-amber-200 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-600 text-lg">warning</span>
+              <p className="text-sm font-medium text-amber-900">Your profile is incomplete. Please complete it to unlock all features.</p>
             </div>
             <Link
               href="/student/profile"
-              className="shrink-0 px-3 py-1.5 bg-orange-500 hover:bg-orange-500/90 text-black font-bold text-[11px] uppercase tracking-wider rounded-lg transition-all"
+              className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-md transition-colors"
             >
-              Complete
+              Complete Profile
             </Link>
           </div>
         )}
-        <div className="px-4 sm:px-6 md:px-8 py-6">
+        <div className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {children}
         </div>
       </main>
-
-      {/* Notification backdrop close */}
-      {showNotifications && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-      )}
     </>
   );
 }

@@ -17,6 +17,8 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const BACKEND =
   process.env.BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
@@ -32,6 +34,9 @@ async function handler(
   const { searchParams } = new URL(request.url);
   const qs = searchParams.toString();
   const backendUrl = `${BACKEND}/api/${path.join("/")}${qs ? `?${qs}` : ""}`;
+
+  console.log(`[proxy] Incoming request for ${backendUrl}`);
+  console.log(`[proxy] Authorization header:`, request.headers.get("authorization"));
 
   // Read request body for mutating methods
   let body: string | undefined;

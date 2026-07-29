@@ -15,12 +15,12 @@ export default function NotificationBell() {
   const href = role === 'admin' || role === 'trainer' ? '/dashboard/notifications' : '/student/notifications';
 
   return (
-    <Link href={href} className="relative p-2 text-white/50 hover:text-white transition-colors group">
+    <Link href={href} className="relative p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors group">
       <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">
         notifications
       </span>
       {unreadCount > 0 && (
-        <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+        <span className="absolute top-1 right-1 w-4 h-4 bg-[var(--danger)] text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-[var(--shadow-sm)]">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}

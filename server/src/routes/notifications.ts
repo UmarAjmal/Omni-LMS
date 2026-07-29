@@ -1,34 +1,47 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { authenticateToken, requireAdminOrTrainer } from '../middleware/auth.js';
+import { authenticateToken, requireAdminOrTrainer, requireAdmin } from '../middleware/auth.js';
 import { NotificationEngine } from '../services/NotificationEngine.js';
 
 const router = Router();
 
 // GET /api/notifications
-// Fetch all notifications for the authenticated student
+// Fetch notifications for the authenticated student (with pagination and filters)
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-    // First get the student_id
     const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
-    if (studentRes.rows.length === 0) {
-      // Return empty array if not a student
-      return res.json({ success: true, data: [] });
-    }
+    if (studentRes.rows.length === 0) return res.json({ success: true, data: [] });
     const studentId = studentRes.rows[0].id;
 
-    const query = `
-      SELECT n.*, nr.is_read, nr.read_at
+    const { page = 1, limit = 20, category } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    let query = `
+      SELECT n.*, nr.is_read, nr.read_at, nr.id as recipient_id
       FROM notifications n
       JOIN notification_recipients nr ON nr.notification_id = n.id
       WHERE nr.student_id = $1
-      ORDER BY n.created_at DESC
     `;
-    const { rows } = await pool.query(query, [studentId]);
-    res.json({ success: true, data: rows });
+    const params: any[] = [studentId];
+
+    if (category && category !== 'All') {
+      params.push(category);
+      query += ` AND n.category = $${params.length}`;
+    }
+
+    query += ` ORDER BY n.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(Number(limit), offset);
+
+    const { rows } = await pool.query(query, params);
+    
+    // Also get unread count
+    const countRes = await pool.query('SELECT COUNT(*) FROM notification_recipients WHERE student_id = $1 AND is_read = false', [studentId]);
+    const unreadCount = parseInt(countRes.rows[0].count);
+
+    res.json({ success: true, data: rows, unreadCount });
   } catch (error) {
     console.error('Error fetching notifications:', error);
     res.status(500).json({ success: false, error: 'Server Error' });
@@ -41,33 +54,16 @@ router.post('/:id/read', authenticateToken, async (req, res) => {
   try {
     const notificationId = parseInt(req.params.id as string);
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
     const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
-    if (studentRes.rows.length === 0) {
-      return res.status(403).json({ success: false, error: 'Not a student' });
-    }
+    if (studentRes.rows.length === 0) return res.status(403).json({ success: false, error: 'Not a student' });
     const studentId = studentRes.rows[0].id;
 
-    // Verify it belongs to the student
-    const checkRes = await pool.query(
-      'SELECT id FROM notification_recipients WHERE notification_id = $1 AND student_id = $2',
-      [notificationId, studentId]
-    );
-    if (checkRes.rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Notification not found' });
-    }
-
-    // Mark as read
     await pool.query(
       'UPDATE notification_recipients SET is_read = true, read_at = CURRENT_TIMESTAMP WHERE notification_id = $1 AND student_id = $2',
       [notificationId, studentId]
     );
-
-    // Log the action
-    const ipAddress = (req.ip as string) || (req.socket.remoteAddress as string) || 'unknown';
-    const userAgent = (req.headers['user-agent'] as string) || 'unknown';
-    await NotificationEngine.logAction(notificationId, studentId, 'marked_read', ipAddress, userAgent);
 
     res.json({ success: true, message: 'Marked as read' });
   } catch (error) {
@@ -76,15 +72,74 @@ router.post('/:id/read', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/notifications/read-all
+router.post('/read-all', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
+    if (studentRes.rows.length === 0) return res.status(403).json({ success: false, error: 'Not a student' });
+    const studentId = studentRes.rows[0].id;
+
+    await pool.query(
+      'UPDATE notification_recipients SET is_read = true, read_at = CURRENT_TIMESTAMP WHERE student_id = $1 AND is_read = false',
+      [studentId]
+    );
+
+    res.json({ success: true, message: 'All marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+});
+
+// DELETE /api/notifications/:id
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const notificationId = parseInt(req.params.id as string);
+    const userId = req.user?.id;
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
+    if (studentRes.rows.length === 0) return res.status(403).json({ success: false, error: 'Not a student' });
+    const studentId = studentRes.rows[0].id;
+
+    await pool.query('DELETE FROM notification_recipients WHERE notification_id = $1 AND student_id = $2', [notificationId, studentId]);
+    res.json({ success: true, message: 'Notification deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+});
+
+// DELETE /api/notifications
+router.delete('/', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    const studentRes = await pool.query('SELECT id FROM students WHERE user_id = $1', [userId]);
+    if (studentRes.rows.length === 0) return res.status(403).json({ success: false, error: 'Not a student' });
+    const studentId = studentRes.rows[0].id;
+
+    await pool.query('DELETE FROM notification_recipients WHERE student_id = $1', [studentId]);
+    res.json({ success: true, message: 'All notifications deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server Error' });
+  }
+});
+
 // POST /api/notifications/fcm-token
-// Register a Firebase Cloud Messaging token for the user
+// Store only ONE active FCM token per device/user
 router.post('/fcm-token', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
     const { token, device_type = 'web' } = req.body;
     
-    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (userId === undefined || userId === null) return res.status(401).json({ success: false, error: 'Unauthorized' });
     if (!token) return res.status(400).json({ success: false, error: 'Token is required' });
+
+    // Remove any existing token for this user & device type to ensure only one active per device
+    await pool.query('DELETE FROM user_fcm_tokens WHERE user_id = $1 AND device_type = $2', [userId, device_type]);
 
     await pool.query(
       `INSERT INTO user_fcm_tokens (user_id, token, device_type) 
@@ -101,7 +156,6 @@ router.post('/fcm-token', authenticateToken, async (req, res) => {
 });
 
 // GET /api/notifications/analytics
-// Fetch analytics for Admin/Trainer
 router.get('/analytics', authenticateToken, requireAdminOrTrainer, async (req, res) => {
   try {
     const query = `
@@ -124,7 +178,6 @@ router.get('/analytics', authenticateToken, requireAdminOrTrainer, async (req, r
 });
 
 // GET /api/notifications/:id/acknowledgements
-// Fetch who read what
 router.get('/:id/acknowledgements', authenticateToken, requireAdminOrTrainer, async (req, res) => {
   try {
     const notificationId = parseInt(req.params.id as string);

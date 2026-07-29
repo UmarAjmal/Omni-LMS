@@ -37,8 +37,9 @@ export const useNotifications = () => useContext(NotificationContext);
 
 export default function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [blockingNotification, setBlockingNotification] = useState<Notification | null>(null);
   const pathname = usePathname();
+  
+  const blockingNotification = notifications.find(n => n.priority === 'critical' && !n.is_read) || null;
 
   // Load notifications
   const fetchNotifications = async () => {
@@ -52,40 +53,6 @@ export default function NotificationProvider({ children }: { children: ReactNode
       console.error("Failed to fetch notifications", err);
     }
   };
-
-  useEffect(() => {
-    // Only run if user is in dashboard or student panel
-    if (pathname.includes('/dashboard') || pathname.includes('/student') || pathname.includes('/trainer')) {
-      fetchNotifications();
-      registerFCMToken();
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    // Find the first unread critical notification to show as blocking popup
-    const critical = notifications.find(n => n.priority === 'critical' && !n.is_read);
-    if (critical) {
-      setBlockingNotification(critical);
-    } else {
-      setBlockingNotification(null);
-    }
-  }, [notifications]);
-
-  // Listen for foreground messages
-  useEffect(() => {
-    const listenToMessages = async () => {
-      try {
-        const payload: any = await onMessageListener();
-        if (payload && payload.notification) {
-          toast.info(payload.notification.title);
-          fetchNotifications(); // Refresh list to get new notification
-        }
-      } catch (err) {
-        console.log("Foreground message listener failed:", err);
-      }
-    };
-    listenToMessages();
-  }, []);
 
   const registerFCMToken = async () => {
     try {
@@ -101,6 +68,34 @@ export default function NotificationProvider({ children }: { children: ReactNode
       console.error("FCM Token registration failed", err);
     }
   };
+
+  useEffect(() => {
+    // Only run if user is in dashboard or student panel
+    if (pathname.includes('/dashboard') || pathname.includes('/student') || pathname.includes('/trainer')) {
+      fetchNotifications();
+      registerFCMToken();
+    }
+  }, [pathname]);
+
+
+  // Listen for foreground messages
+  useEffect(() => {
+    let unsubscribe = () => {};
+    const setupListener = async () => {
+      // Need to wait for messaging to initialize
+      unsubscribe = onMessageListener((payload: any) => {
+        if (payload && payload.notification) {
+          toast.info(payload.notification.title);
+          fetchNotifications(); // Refresh list to get new notification
+          // Dispatch a custom event so NotificationCenter can also refresh
+          window.dispatchEvent(new CustomEvent('fcm-message', { detail: payload }));
+        }
+      }) as unknown as () => void;
+    };
+    setupListener();
+    return () => unsubscribe();
+  }, []);
+
 
   const markAsRead = async (id: number) => {
     try {
@@ -123,8 +118,8 @@ export default function NotificationProvider({ children }: { children: ReactNode
       {/* Mandatory Blocking Popup */}
       {blockingNotification && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-[#101827] border border-white/10 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
-            <div className="p-6 border-b border-white/10 flex items-center gap-4 bg-gradient-to-r from-red-500/10 to-transparent">
+          <div className="bg-white border border-[var(--border)] rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+            <div className="p-6 border-b border-[var(--border)] flex items-center gap-4 bg-gradient-to-r from-red-500/10 to-transparent">
               <span className="material-symbols-outlined text-4xl text-red-500">warning</span>
               <div>
                 <h2 className="text-xl font-bold text-white tracking-tight">Critical Alert</h2>
@@ -143,7 +138,7 @@ export default function NotificationProvider({ children }: { children: ReactNode
                   </Link>
                 )}
                 {blockingNotification.attachment_url && (
-                  <a href={blockingNotification.attachment_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#F6B32B] hover:text-[#E09B18] font-medium">
+                  <a href={blockingNotification.attachment_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[var(--primary)] hover:text-[var(--primary)] font-medium">
                     <span className="material-symbols-outlined text-sm">attach_file</span>
                     Download Attachment
                   </a>
@@ -151,10 +146,10 @@ export default function NotificationProvider({ children }: { children: ReactNode
               </div>
             </div>
 
-            <div className="p-6 border-t border-white/10 bg-white/[0.02] flex justify-end">
+            <div className="p-6 border-t border-[var(--border)] bg-gray-50 flex justify-end">
               <button 
                 onClick={() => markAsRead(blockingNotification.id)}
-                className="bg-[#F6B32B] hover:bg-[#E09B18] text-black px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-[#F6B32B]/20 flex items-center gap-2"
+                className="bg-[var(--primary)] hover:bg-[#E09B18] text-black px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-[var(--shadow-sm)] flex items-center gap-2"
               >
                 <span className="material-symbols-outlined">done_all</span>
                 Mark as Read

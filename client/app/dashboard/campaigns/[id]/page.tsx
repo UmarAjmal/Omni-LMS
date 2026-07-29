@@ -64,17 +64,17 @@ export default function CampaignDetailsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[var(--primary)]/30 border-t-[var(--primary)] rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!campaign) return <div className="text-white/50 p-8 text-center">Campaign not found</div>;
+  if (!campaign) return <div className="text-[var(--text-secondary)] p-8 text-center">Campaign not found</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/campaigns" className="text-white/50 hover:text-white transition-colors">
+        <Link href="/dashboard/campaigns" className="text-[var(--text-secondary)] hover:text-white transition-colors">
           <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </Link>
         <div className="flex-1 flex justify-between items-center">
@@ -89,13 +89,13 @@ export default function CampaignDetailsPage() {
                 {campaign.status}
               </span>
             </div>
-            <p className="text-sm text-white/50 mt-1">Target: {campaign.target_leads} leads | Deadline: {new Date(campaign.deadline).toLocaleDateString()}</p>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">Target: {campaign.target_leads} leads | Deadline: {new Date(campaign.deadline).toLocaleDateString()}</p>
           </div>
           
           {campaign.status === 'active' && (
             <button 
               onClick={() => handleUpdateStatus('completed')}
-              className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-sm font-bold border border-white/10 transition-colors"
+              className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-sm font-bold border border-[var(--border)] transition-colors"
             >
               Mark Completed
             </button>
@@ -106,24 +106,24 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Details */}
-          <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Description & Instructions</h2>
+          <div className="bg-white border border-[var(--border)] rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Description & Instructions</h2>
             <p className="text-white/70 text-sm mb-6 leading-relaxed whitespace-pre-wrap">{campaign.description || "No description provided."}</p>
             
             {campaign.instructions && (
-              <div className="bg-[#F6B32B]/10 border border-[#F6B32B]/20 rounded-xl p-4">
-                <h3 className="text-[#F6B32B] font-bold text-sm flex items-center gap-2 mb-2">
+              <div className="bg-[var(--primary)]/10 border border-[var(--primary)]/20 rounded-xl p-4">
+                <h3 className="text-[var(--primary)] font-bold text-sm flex items-center gap-2 mb-2">
                   <span className="material-symbols-outlined text-[18px]">info</span>
                   Hunting Instructions
                 </h3>
-                <p className="text-[#F6B32B]/80 text-sm whitespace-pre-wrap">{campaign.instructions}</p>
+                <p className="text-[var(--primary)]/80 text-sm whitespace-pre-wrap">{campaign.instructions}</p>
               </div>
             )}
           </div>
 
           {/* Submissions */}
-          <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+          <div className="bg-white border border-[var(--border)] rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-4 border-b border-[var(--border)] pb-2">
               <h2 className="text-lg font-bold text-white">Lead Submissions</h2>
               <span className="bg-white/10 text-white px-2 py-1 rounded-full text-xs font-bold">{leads.length} total</span>
             </div>
@@ -131,7 +131,7 @@ export default function CampaignDetailsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="text-white/40 border-b border-white/5">
+                  <tr className="text-[var(--text-secondary)] border-b border-white/5">
                     <th className="font-medium p-3">Business</th>
                     <th className="font-medium p-3">Student</th>
                     <th className="font-medium p-3">Contact</th>
@@ -140,10 +140,10 @@ export default function CampaignDetailsPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {leads.map(lead => (
-                    <tr key={lead.id} className="text-white/70 hover:bg-white/[0.02]">
+                    <tr key={lead.id} className="text-white/70 hover:bg-gray-50">
                       <td className="p-3">
                         <div className="font-bold text-white">{lead.business_name}</div>
-                        <div className="text-xs text-white/40">{lead.platform}</div>
+                        <div className="text-xs text-[var(--text-secondary)]">{lead.platform}</div>
                       </td>
                       <td className="p-3">{lead.first_name} {lead.last_name}</td>
                       <td className="p-3 text-xs">
@@ -163,7 +163,7 @@ export default function CampaignDetailsPage() {
                   ))}
                   {leads.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-6 text-center text-white/40">No leads submitted yet.</td>
+                      <td colSpan={4} className="p-6 text-center text-[var(--text-secondary)]">No leads submitted yet.</td>
                     </tr>
                   )}
                 </tbody>
@@ -174,22 +174,22 @@ export default function CampaignDetailsPage() {
 
         <div className="space-y-6">
           {/* Targets */}
-          <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Target Data</h2>
+          <div className="bg-white border border-[var(--border)] rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-white mb-4 border-b border-[var(--border)] pb-2">Target Data</h2>
             <div className="space-y-4">
               <div>
-                <span className="block text-xs font-bold text-white/40 uppercase mb-1">Keywords</span>
+                <span className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-1">Keywords</span>
                 <div className="flex flex-wrap gap-1">
                   {campaign.keywords?.map((k: any) => (
-                    <span key={k.id} className="bg-white/5 text-white/70 border border-white/10 px-2 py-1 rounded text-xs">{k.keyword}</span>
+                    <span key={k.id} className="bg-white/5 text-white/70 border border-[var(--border)] px-2 py-1 rounded text-xs">{k.keyword}</span>
                   ))}
                 </div>
               </div>
               <div>
-                <span className="block text-xs font-bold text-white/40 uppercase mb-1">Platforms</span>
+                <span className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-1">Platforms</span>
                 <div className="flex flex-wrap gap-1">
                   {(campaign.platforms || []).map((p: string) => (
-                    <span key={p} className="bg-[#F6B32B]/10 text-[#F6B32B] border border-[#F6B32B]/20 px-2 py-1 rounded text-xs">{p}</span>
+                    <span key={p} className="bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 px-2 py-1 rounded text-xs">{p}</span>
                   ))}
                 </div>
               </div>
@@ -197,22 +197,22 @@ export default function CampaignDetailsPage() {
           </div>
 
           {/* Assigned Students */}
-          <div className="bg-[#101827] border border-white/[0.06] rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+          <div className="bg-white border border-[var(--border)] rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-4 border-b border-[var(--border)] pb-2">
               <h2 className="text-lg font-bold text-white">Assigned Team</h2>
-              <span className="text-xs text-white/40">{campaign.students?.length || 0} students</span>
+              <span className="text-xs text-[var(--text-secondary)]">{campaign.students?.length || 0} students</span>
             </div>
             <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
               {campaign.students?.map((s: any) => (
                 <div key={s.id} className="flex justify-between items-center bg-white/5 rounded-xl p-3">
                   <div>
                     <div className="text-sm font-bold text-white">{s.first_name} {s.last_name}</div>
-                    <div className="text-[10px] text-white/40">{s.enrollment_id}</div>
+                    <div className="text-[10px] text-[var(--text-secondary)]">{s.enrollment_id}</div>
                   </div>
                 </div>
               ))}
               {(!campaign.students || campaign.students.length === 0) && (
-                <div className="text-sm text-white/40 text-center py-4">No students assigned.</div>
+                <div className="text-sm text-[var(--text-secondary)] text-center py-4">No students assigned.</div>
               )}
             </div>
           </div>

@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "react-toastify";
+import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
 
 interface NotificationAnalytics {
   id: number;
@@ -25,6 +30,7 @@ export default function NotificationAnalyticsPage() {
   }, []);
 
   const fetchAnalytics = async () => {
+    setLoading(true);
     try {
       const res = await apiClient("/api/notifications/analytics");
       const json = await res.json();
@@ -41,93 +47,100 @@ export default function NotificationAnalyticsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 pt-24 min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <span className="material-symbols-outlined text-[#F6B32B] text-4xl">analytics</span>
-            Notification Analytics
-          </h1>
-          <p className="text-white/50 mt-1 text-sm">Monitor acknowledgement rates for dispatched notifications</p>
-        </div>
-        <button 
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Notification Analytics" 
+          description="Monitor acknowledgement rates for dispatched notifications" 
+          icon="analytics"
+        />
+        <Button 
+          variant="outline"
           onClick={fetchAnalytics}
-          className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl flex items-center gap-2 border border-white/10 transition-colors text-sm font-medium w-fit"
+          disabled={loading}
+          className="shrink-0 mt-8 md:mt-0"
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <span className={`material-symbols-outlined mr-2 ${loading ? 'animate-spin' : ''}`}>refresh</span>
           Refresh Data
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-[#101827] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-white/70">
-            <thead className="text-xs text-white uppercase bg-white/5 border-b border-white/10">
-              <tr>
-                <th className="px-6 py-4">Title</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Priority</th>
-                <th className="px-6 py-4 text-center">Recipients</th>
-                <th className="px-6 py-4 text-center">Read</th>
-                <th className="px-6 py-4 text-center">Unread</th>
-                <th className="px-6 py-4">Ack. Rate</th>
-                <th className="px-6 py-4">Sent At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-white/30">Loading analytics...</td>
-                </tr>
-              ) : analytics.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-white/30">No notifications dispatched yet.</td>
-                </tr>
-              ) : (
-                analytics.map((item) => (
-                  <tr key={item.id} className="border-b border-white/[0.04] hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 font-medium text-white max-w-[200px] truncate" title={item.title}>
-                      {item.title}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="bg-white/5 border border-white/10 text-[10px] px-2 py-1 rounded-md uppercase tracking-wider">
-                        {item.type}
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead className="text-center">Recipients</TableHead>
+              <TableHead className="text-center">Read</TableHead>
+              <TableHead className="text-center">Unread</TableHead>
+              <TableHead>Ack. Rate</TableHead>
+              <TableHead className="text-right">Sent At</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="h-32 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-2" />
+                    <span className="text-sm text-gray-500">Loading analytics...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : analytics.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="h-32 text-center text-gray-500">
+                  No notifications dispatched yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              analytics.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-semibold text-gray-900 max-w-[200px] truncate" title={item.title}>
+                    {item.title}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+                      {item.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {item.priority === 'critical' ? (
+                      <span className="text-red-600 font-bold text-xs uppercase flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Critical
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {item.priority === 'critical' ? (
-                        <span className="text-red-400 font-bold text-xs uppercase flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                          Critical
-                        </span>
-                      ) : (
-                        <span className="text-white/50 text-xs uppercase">Normal</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center font-mono">{item.total_recipients}</td>
-                    <td className="px-6 py-4 text-center text-green-400 font-mono">{item.read_count}</td>
-                    <td className="px-6 py-4 text-center text-[#F6B32B] font-mono">{item.unread_count}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-white/10 rounded-full h-1.5 max-w-[60px]">
-                          <div 
-                            className="bg-[#F6B32B] h-1.5 rounded-full" 
-                            style={{ width: `${item.read_percentage}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-mono">{item.read_percentage}%</span>
+                    ) : (
+                      <span className="text-gray-500 text-xs uppercase font-medium">Normal</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-gray-600">{item.total_recipients}</TableCell>
+                  <TableCell className="text-center font-mono text-emerald-600 font-semibold">{item.read_count}</TableCell>
+                  <TableCell className="text-center font-mono text-blue-600 font-semibold">{item.unread_count}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="w-full bg-gray-100 rounded-full h-2 max-w-[80px]">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${item.read_percentage}%` }}
+                        ></div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-xs whitespace-nowrap">
-                      {new Date(item.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      <span className="text-xs font-mono font-medium text-gray-600">{item.read_percentage}%</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right text-xs text-gray-500 font-medium whitespace-nowrap">
+                    {new Date(item.created_at).toLocaleString(undefined, {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

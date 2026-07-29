@@ -4,6 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Badge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
 
 interface FeePayment {
   id: number;
@@ -68,13 +73,13 @@ export default function StudentFeesPage() {
     }
   }, [fetchFeeData, router]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
-      case "paid": return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
-      case "partial": return "bg-[#F6B32B]/15 text-[#F6B32B border-[#F6B32B]/20";
-      case "course_not_assigned": return "bg-red-500/15 text-red-400 border-red-500/20";
-      case "fee_not_configured": return "bg-red-500/15 text-red-400 border-red-500/20";
-      default: return "bg-red-500/15 text-red-400 border-red-500/20";
+      case "paid": return "success";
+      case "partial": return "warning";
+      case "course_not_assigned": return "destructive";
+      case "fee_not_configured": return "destructive";
+      default: return "destructive";
     }
   };
 
@@ -98,8 +103,9 @@ export default function StudentFeesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="w-8 h-8 border-4 border-[#F6B32B]/30 border-t-[#F6B32B] rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="text-sm font-medium text-gray-500">Loading fee information...</p>
       </div>
     );
   }
@@ -113,15 +119,8 @@ export default function StudentFeesPage() {
   const lastPayment = payments.length > 0 ? payments[0].payment_date : null;
 
   return (
-    <div className="relative text-xs font-sans text-white/90">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <style dangerouslySetInnerHTML={{__html: `
-        .glacier-card {
-          background: rgba(10, 20, 38, 0.72);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255,255,255,0.08);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-        }
-        
         @media print {
           body * {
             visibility: hidden;
@@ -189,118 +188,128 @@ export default function StudentFeesPage() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">My Fees</h1>
-          <p className="text-sm text-white/50 mt-1">Track your course fee status and payment history.</p>
-        </div>
+      <div className="no-print">
+        <PageHeader 
+          title="My Fees" 
+          description="Track your course fee status and payment history." 
+          icon="account_balance_wallet"
+        />
       </div>
 
       {!fee ? (
-        <div className="glacier-card rounded-2xl p-8 text-center border-white/5 flex flex-col items-center justify-center min-h-[300px] no-print">
-          <span className="material-symbols-outlined text-6xl text-white/10 mb-4">account_balance_wallet</span>
-          <p className="text-white/40 text-lg">No fee record found for your account.</p>
-        </div>
+        <Card className="no-print border-dashed border-2 bg-gray-50/50">
+          <CardContent className="flex flex-col items-center justify-center min-h-[300px] text-center">
+            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-gray-300">
+              <span className="material-symbols-outlined text-[32px]">account_balance_wallet</span>
+            </div>
+            <p className="text-gray-500 font-medium text-lg">No fee record found for your account.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-6 no-print">
+        <div className="space-y-8 no-print">
           {/* Top Status Card */}
-          <div className="glacier-card rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#F6B32B]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <Card className="bg-gradient-to-br from-blue-900 to-blue-800 border-0 overflow-hidden relative shadow-lg">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             
-            <div className="flex-1 space-y-2 relative z-10 w-full">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Current Status</p>
-              <div className="flex flex-col gap-2">
+            <CardContent className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+              <div className="flex-1 w-full space-y-4">
+                <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Current Status</p>
                 <div>
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase border ${getStatusColor(statusStr)}`}>
+                  <Badge variant={getStatusVariant(statusStr) as any} className="uppercase tracking-wider px-3 py-1">
                     {getStatusLabel(statusStr)}
-                  </span>
+                  </Badge>
                 </div>
                 {lastPayment && (
-                  <p className="text-xs text-white/50 mt-2">
-                    <span className="font-bold text-white/70">Last Payment:</span> {new Date(lastPayment).toLocaleDateString()}
+                  <p className="text-sm text-blue-100 font-medium">
+                    <span className="text-blue-300 font-semibold mr-2">Last Payment:</span> {new Date(lastPayment).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
                 )}
               </div>
-            </div>
 
-            <div className="flex flex-row justify-around w-full md:w-auto gap-8 relative z-10">
-              <div className="flex flex-col items-center md:items-end">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Total Fee</span>
-                <span className="text-2xl font-bold text-white">{fee.total_fee === null ? 'Not Configured' : `Rs. ${fee.total_fee}`}</span>
+              <div className="flex flex-col sm:flex-row justify-around w-full md:w-auto gap-8 sm:gap-12 shrink-0 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-inner">
+                <div className="flex flex-col items-center md:items-end">
+                  <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-1">Total Fee</span>
+                  <span className="text-2xl font-bold text-white">{fee.total_fee === null ? 'Not Configured' : `Rs. ${fee.total_fee}`}</span>
+                </div>
+                <div className="flex flex-col items-center md:items-end">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Paid</span>
+                  <span className="text-2xl font-bold text-emerald-400">{fee.paid_amount === null ? '—' : `Rs. ${fee.paid_amount}`}</span>
+                </div>
+                <div className="flex flex-col items-center md:items-end">
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">Remaining</span>
+                  <span className="text-2xl font-bold text-red-400">{fee.remaining_amount === null ? '—' : `Rs. ${fee.remaining_amount}`}</span>
+                </div>
               </div>
-              <div className="flex flex-col items-center md:items-end">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Paid</span>
-                <span className="text-2xl font-bold text-emerald-400">{fee.paid_amount === null ? '—' : `Rs. ${fee.paid_amount}`}</span>
-              </div>
-              <div className="flex flex-col items-center md:items-end">
-                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">Remaining</span>
-                <span className="text-2xl font-bold text-red-400">{fee.remaining_amount === null ? '—' : `Rs. ${fee.remaining_amount}`}</span>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Progress Bar */}
-          <div className="glacier-card rounded-2xl p-6">
-            <div className="flex justify-between items-end mb-3">
-              <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Fee Progress</span>
-              <span className="text-sm font-bold text-emerald-400">{Math.round(progressPct)}% Paid</span>
-            </div>
-            <div className="w-full h-3 bg-white/[0.03] rounded-full overflow-hidden border border-white/5">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-end mb-4">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Fee Progress</span>
+                <span className="text-sm font-black text-emerald-600">{Math.round(progressPct)}% Paid</span>
+              </div>
+              <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* History */}
-          <div className="glacier-card rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/[0.06] bg-white/[0.01]">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-[#F6B32B]">history</span>
+          <Card>
+            <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <span className="material-symbols-outlined text-blue-600">history</span>
                 Payment History
-              </h3>
-            </div>
-            <div className="p-6 overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead>
-                  <tr className="text-[10px] font-bold uppercase tracking-wider text-white/40 border-b border-white/[0.04]">
-                    <th className="pb-3 px-2">Date</th>
-                    <th className="pb-3 px-2">Amount</th>
-                    <th className="pb-3 px-2">Method</th>
-                    <th className="pb-3 px-2">Receipt / Ref</th>
-                    <th className="pb-3 px-2">Remarks</th>
-                    <th className="pb-3 px-2 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.02]">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Receipt / Ref</TableHead>
+                    <TableHead>Remarks</TableHead>
+                    <TableHead className="text-center">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="py-4 px-2 text-white/70">{new Date(p.payment_date).toLocaleDateString()}</td>
-                      <td className="py-4 px-2 font-bold text-emerald-400">Rs. {p.amount}</td>
-                      <td className="py-4 px-2 text-white/70">{p.payment_method}</td>
-                      <td className="py-4 px-2 text-white/40 text-[11px]">{p.receipt_number || "—"}</td>
-                      <td className="py-4 px-2 text-[#F6B32B]/80 text-[11px] italic">{p.remarks || "—"}</td>
-                      <td className="py-4 px-2 text-center">
-                        <button 
+                    <TableRow key={p.id}>
+                      <TableCell className="text-gray-600 font-medium">{new Date(p.payment_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</TableCell>
+                      <TableCell className="font-bold text-emerald-600">Rs. {p.amount}</TableCell>
+                      <TableCell className="text-gray-600">{p.payment_method}</TableCell>
+                      <TableCell className="text-gray-500 text-xs font-mono">{p.receipt_number || "—"}</TableCell>
+                      <TableCell className="text-blue-600 text-xs italic">{p.remarks || "—"}</TableCell>
+                      <TableCell className="text-center">
+                        <Button 
+                          variant="ghost"
+                          size="sm"
                           onClick={() => printReceipt(p)}
-                          className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors mx-auto"
                           title="Download/Print Receipt"
                         >
-                          <span className="material-symbols-outlined text-sm">print</span>
-                        </button>
-                      </td>
-                    </tr>
+                          <span className="material-symbols-outlined text-[18px]">print</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   ))}
                   {payments.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-white/30">No payments recorded.</td>
-                    </tr>
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-32 text-center text-gray-500">
+                        No payments recorded.
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
 
         </div>
       )}
