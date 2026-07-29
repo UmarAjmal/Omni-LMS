@@ -14,10 +14,10 @@ router.post('/campaigns', authenticateToken, requireAdminOrTrainer, async (req, 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { 
-      title, description, platforms, target_batch, target_trainer, 
-      target_leads, daily_target, priority, start_date, deadline, 
-      instructions, keywords, student_ids 
+    const {
+      title, description, platforms, target_batch, target_trainer,
+      target_leads, daily_target, priority, start_date, deadline,
+      instructions, keywords, student_ids
     } = req.body;
 
     const insertCampaign = await client.query(`
@@ -26,7 +26,7 @@ router.post('/campaigns', authenticateToken, requireAdminOrTrainer, async (req, 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `, [title, description, JSON.stringify(platforms || []), target_batch, target_trainer, target_leads, daily_target, priority, start_date, deadline, instructions, req.user?.id]);
-    
+
     const campaignId = insertCampaign.rows[0].id;
 
     if (keywords && keywords.length > 0) {
@@ -39,15 +39,17 @@ router.post('/campaigns', authenticateToken, requireAdminOrTrainer, async (req, 
       for (const sId of student_ids) {
         await client.query('INSERT INTO campaign_students (campaign_id, student_id) VALUES ($1, $2)', [campaignId, sId]);
       }
-      
+
       // Dispatch Campaign Assignment Notification
       await NotificationEngine.createNotification({
-        type: 'lead_campaign',
+        type: 'lead_campaign_assigned',
+        category: 'Lead Campaign',
         title: `New Campaign: ${title}`,
         message: `You have been assigned to campaign "${title}". Target: ${target_leads} leads. Deadline: ${deadline ? new Date(deadline).toLocaleDateString() : 'N/A'}.`,
         priority: 'critical',
         recipients: student_ids,
-        createdBy: req.user?.id
+        createdBy: req.user?.id,
+        sendEmail: true
       });
     }
 
@@ -113,10 +115,10 @@ router.get('/student/:id/campaigns', authenticateToken, requireStudent, async (r
   try {
     const studentId = req.params.id;
     if (req.user?.id !== parseInt(studentId as string)) {
-        // Wait, req.user.id is the User ID. studentId is the Student ID.
-        // We need to verify if the student belongs to the user.
-        const check = await pool.query('SELECT id FROM students WHERE id = $1 AND user_id = $2', [studentId, req.user?.id]);
-        if (check.rows.length === 0) return res.status(403).json({ success: false, error: "Unauthorized" });
+      // Wait, req.user.id is the User ID. studentId is the Student ID.
+      // We need to verify if the student belongs to the user.
+      const check = await pool.query('SELECT id FROM students WHERE id = $1 AND user_id = $2', [studentId, req.user?.id]);
+      if (check.rows.length === 0) return res.status(403).json({ success: false, error: "Unauthorized" });
     }
 
     const campaigns = await pool.query(`
@@ -141,14 +143,14 @@ router.get('/student/:id/campaigns', authenticateToken, requireStudent, async (r
 router.post('/leads', authenticateToken, requireStudent, async (req, res) => {
   try {
     const { campaign_id, student_id, business_name, contact_person, phone, email, website, address, city, country, industry, platform, keyword, business_url, lead_quality, notes } = req.body;
-    
+
     // Duplicate Validation
     const dupeCheck = await pool.query(`
       SELECT id FROM lead_submissions 
       WHERE campaign_id = $1 AND (phone = $2 OR email = $3 OR website = $4 OR business_url = $5)
       LIMIT 1
     `, [campaign_id, phone || 'N/A', email || 'N/A', website || 'N/A', business_url || 'N/A']);
-    
+
     if (dupeCheck.rows.length > 0) {
       return res.status(400).json({ success: false, error: "Duplicate lead detected in this campaign based on contact info or URLs." });
     }
@@ -162,7 +164,7 @@ router.post('/leads', authenticateToken, requireStudent, async (req, res) => {
     res.json({ success: true, data: insert.rows[0] });
   } catch (err: any) {
     if (err.code === '23505') { // unique constraint violation
-        return res.status(400).json({ success: false, error: "Duplicate lead detected." });
+      return res.status(400).json({ success: false, error: "Duplicate lead detected." });
     }
     res.status(500).json({ success: false, error: err.message });
   }
@@ -195,7 +197,7 @@ router.post('/leads/:id/review', authenticateToken, requireAdminOrTrainer, async
     await client.query('BEGIN');
     const leadId = req.params.id;
     const { status, feedback, points_awarded } = req.body;
-    
+
     // Update Lead Status
     const updateLead = await client.query('UPDATE lead_submissions SET status = $1 WHERE id = $2 RETURNING student_id', [status, leadId]);
     const studentId = updateLead.rows[0].student_id;
@@ -213,6 +215,20 @@ router.post('/leads/:id/review', authenticateToken, requireAdminOrTrainer, async
         VALUES ($1, $2, $3)
       `, [studentId, leadId, points_awarded]);
     }
+
+    const { rows } = await client.query('SELECT business_name, contact_person FROM lead_submissions WHERE id = $1', [leadId]);
+    const leadName = rows[0] ? (rows[0].business_name || rows[0].contact_person) : 'Lead';
+
+    await NotificationEngine.createNotification({
+      type: status === 'approved' ? 'lead_approved' : 'lead_rejected',
+      category: status === 'approved' ? 'Lead Approved' : 'Lead Rejected',
+      title: `Lead ${status === 'approved' ? 'Approved' : 'Rejected'}: ${leadName}`,
+      message: `Your lead "${leadName}" was ${status}. ${feedback ? 'Feedback: ' + feedback : ''} ${points_awarded > 0 ? 'Points Awarded: ' + points_awarded : ''}`,
+      priority: status === 'approved' ? 'normal' : 'normal',
+      recipients: [studentId],
+      createdBy: req.user?.id,
+      sendEmail: true
+    });
 
     await client.query('COMMIT');
     res.json({ success: true, message: "Review submitted successfully" });

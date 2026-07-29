@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import NotificationBell from "./NotificationBell";
+import { NotificationCenter } from "./NotificationCenter";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
 
@@ -323,7 +323,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="flex items-center gap-4">
-          <NotificationBell />
+          <NotificationCenter />
           <div className="h-4 w-px bg-gray-200"></div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex flex-col text-right">

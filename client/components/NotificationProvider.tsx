@@ -37,8 +37,9 @@ export const useNotifications = () => useContext(NotificationContext);
 
 export default function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [blockingNotification, setBlockingNotification] = useState<Notification | null>(null);
   const pathname = usePathname();
+  
+  const blockingNotification = notifications.find(n => n.priority === 'critical' && !n.is_read) || null;
 
   // Load notifications
   const fetchNotifications = async () => {
@@ -52,40 +53,6 @@ export default function NotificationProvider({ children }: { children: ReactNode
       console.error("Failed to fetch notifications", err);
     }
   };
-
-  useEffect(() => {
-    // Only run if user is in dashboard or student panel
-    if (pathname.includes('/dashboard') || pathname.includes('/student') || pathname.includes('/trainer')) {
-      fetchNotifications();
-      registerFCMToken();
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    // Find the first unread critical notification to show as blocking popup
-    const critical = notifications.find(n => n.priority === 'critical' && !n.is_read);
-    if (critical) {
-      setBlockingNotification(critical);
-    } else {
-      setBlockingNotification(null);
-    }
-  }, [notifications]);
-
-  // Listen for foreground messages
-  useEffect(() => {
-    const listenToMessages = async () => {
-      try {
-        const payload: any = await onMessageListener();
-        if (payload && payload.notification) {
-          toast.info(payload.notification.title);
-          fetchNotifications(); // Refresh list to get new notification
-        }
-      } catch (err) {
-        console.log("Foreground message listener failed:", err);
-      }
-    };
-    listenToMessages();
-  }, []);
 
   const registerFCMToken = async () => {
     try {
@@ -101,6 +68,34 @@ export default function NotificationProvider({ children }: { children: ReactNode
       console.error("FCM Token registration failed", err);
     }
   };
+
+  useEffect(() => {
+    // Only run if user is in dashboard or student panel
+    if (pathname.includes('/dashboard') || pathname.includes('/student') || pathname.includes('/trainer')) {
+      fetchNotifications();
+      registerFCMToken();
+    }
+  }, [pathname]);
+
+
+  // Listen for foreground messages
+  useEffect(() => {
+    let unsubscribe = () => {};
+    const setupListener = async () => {
+      // Need to wait for messaging to initialize
+      unsubscribe = onMessageListener((payload: any) => {
+        if (payload && payload.notification) {
+          toast.info(payload.notification.title);
+          fetchNotifications(); // Refresh list to get new notification
+          // Dispatch a custom event so NotificationCenter can also refresh
+          window.dispatchEvent(new CustomEvent('fcm-message', { detail: payload }));
+        }
+      }) as unknown as () => void;
+    };
+    setupListener();
+    return () => unsubscribe();
+  }, []);
+
 
   const markAsRead = async (id: number) => {
     try {

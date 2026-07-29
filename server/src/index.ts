@@ -9,9 +9,14 @@ import jwt from 'jsonwebtoken';
 import campaignRoutes from './routes/campaigns.js';
 import notificationRoutes from './routes/notifications.js';
 import { NotificationEngine } from './services/NotificationEngine.js';
+import { EmailQueueWorker } from './services/EmailQueueWorker.js';
 import { supabase, pool } from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Start the background email worker
+EmailQueueWorker.start();
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -103,7 +108,10 @@ app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
+import settingsRoutes from './routes/settings.js';
+
 // Mount modular routes
+app.use('/api/settings', settingsRoutes);
 app.use('/api', campaignRoutes);
 app.use('/api/notifications', notificationRoutes);
 
@@ -132,7 +140,7 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
     const safeFilename = Date.now() + '_' + path.basename(filename).replace(/[^a-zA-Z0-9.\-_]/g, '');
 
     let imageUrl = '';
-    
+
     if (process.env.GITHUB_TOKEN) {
       // Upload via GitHub Contents API (creates a commit in the repo)
       imageUrl = await uploadToGitHub(safeFilename, pureBase64);
@@ -628,15 +636,29 @@ app.post('/api/applicants/:id/approve', authenticateToken, requireAdmin, async (
 
     // 4. Create Student
     const enrollmentId = 'ENR-' + Date.now().toString().slice(-6) + '-' + applicant.id;
-    await client.query(`
+    const studentRes = await client.query(`
       INSERT INTO students (user_id, first_name, last_name, enrollment_id, program)
       VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
     `, [userId, applicant.first_name, applicant.last_name, enrollmentId, applicant.program]);
+    const studentId = studentRes.rows[0].id;
 
     // 5. Update Applicant Status
     await client.query("UPDATE applicants SET status = 'approved' WHERE id = $1", [id]);
 
     await client.query('COMMIT');
+
+    // Dispatch Welcome Notification
+    await NotificationEngine.createNotification({
+      type: 'account_approved',
+      category: 'System',
+      title: 'Account Approved - Welcome to Falcon Swift!',
+      message: `Your application has been approved. Your login email is ${applicant.email} and your default password is Password@123. Please login and change your password.`,
+      priority: 'high',
+      recipients: [studentId],
+      createdBy: req.user?.id,
+      sendEmail: true
+    });
     res.json({ success: true, message: 'Applicant approved. User and Student accounts created successfully.' });
   } catch (err: any) {
     await client.query('ROLLBACK');
@@ -721,7 +743,7 @@ app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
   // Use user id attached to req by authenticateToken
   const userId = (req as any).user?.id;
 
-  if (!userId) {
+  if (userId === undefined || userId === null) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 
@@ -1055,10 +1077,10 @@ app.post('/api/training-applications/:id/approve', authenticateToken, requireAdm
     // 3. Check or Create User Account
     let userRes = await client.query("SELECT id FROM users WHERE email = $1", [app_data.gmail]);
     let userId;
-    
+
     // Default password for new accounts
     const tempPassword = 'Password@123';
-    
+
     if (userRes.rows.length > 0) {
       userId = userRes.rows[0].id;
       // Also ensure they have to change their password if they were just approved
@@ -1343,6 +1365,20 @@ app.post('/api/tasks', authenticateToken, requireAdminOrTrainer, async (req, res
     }
     await client.query('COMMIT');
     client.release();
+
+    if (assignedStudentIds && assignedStudentIds.length > 0) {
+      await NotificationEngine.createNotification({
+        type: 'assignment_created',
+        category: 'Assignment',
+        title: `New Task: ${title}`,
+        message: `You have been assigned a new task: ${title}. Due date: ${dueDate || 'N/A'}.`,
+        priority: 'high',
+        recipients: assignedStudentIds,
+        createdBy: req.user?.id,
+        sendEmail: true
+      });
+    }
+
     res.status(201).json({ success: true, data: task });
   } catch (err: any) {
     await client.query('ROLLBACK');
@@ -1756,6 +1792,7 @@ app.post('/api/tasks/assignments/:assignmentId/publish', authenticateToken, requ
       // 3. Create notification via NotificationEngine (Normal Priority)
       await NotificationEngine.createNotification({
         type: 'other',
+        category: 'System',
         title: `Task Reviewed: ${d.task_name}`,
         message: `Your task "${d.task_name}" has been reviewed. Score: ${scoreNum}/100. ${feedback ? 'Feedback: ' + feedback : ''}`,
         priority: 'normal',
@@ -1824,12 +1861,14 @@ app.post('/api/tasks/assign-with-email', authenticateToken, requireAdmin, async 
     }
     // Create notifications via NotificationEngine (Critical Priority)
     await NotificationEngine.createNotification({
-      type: 'assignment',
+      type: 'assignment_created',
+      category: 'Assignment',
       title: `New Task: ${title}`,
       message: `A new task "${title}" has been assigned in ${courseLabel || courseId}. Deadline: ${dueDate ? new Date(dueDate).toLocaleDateString() : 'N/A'}`,
       priority: 'critical',
       recipients: assignedStudentIds,
-      createdBy: req.user?.id
+      createdBy: req.user?.id,
+      sendEmail: true
     });
     await client.query('COMMIT');
     client.release();
@@ -1895,6 +1934,7 @@ app.post('/api/attendance', authenticateToken, requireAdminOrTrainer, async (req
         const statusLabel = record.status === 'present' ? 'Present ✅' : record.status === 'absent' ? 'Absent ❌' : record.status === 'late' ? 'Late ⏰' : 'On Leave 📋';
         await NotificationEngine.createNotification({
           type: 'other',
+          category: 'System',
           title: `Attendance Marked: ${new Date(date).toDateString()}`,
           message: `Your attendance for ${new Date(date).toDateString()} has been marked as ${statusLabel}.`,
           priority: 'normal',
@@ -2005,18 +2045,20 @@ app.post('/api/announcements', authenticateToken, requireAdmin, async (req, res)
     // Create notifications for all students via NotificationEngine (Critical Priority)
     const studentsRes = await client.query('SELECT id FROM students');
     const studentIds = studentsRes.rows.map(row => row.id);
-    
+
     await client.query('COMMIT');
     client.release();
 
     if (studentIds.length > 0) {
       await NotificationEngine.createNotification({
-        type: 'announcement',
+        type: 'announcement_published',
+        category: 'Announcement',
         title: `📢 ${title}`,
         message: content.substring(0, 200),
         priority: 'critical',
         recipients: studentIds,
-        createdBy: req.user?.id
+        createdBy: req.user?.id,
+        sendEmail: true
       });
     }
     // Optional: send email to all students
@@ -2051,14 +2093,14 @@ app.get('/api/announcements', authenticateToken, async (req, res) => {
   const { limit = 20, offset = 0 } = req.query;
   try {
     let query = 'SELECT * FROM announcements ';
-    
+
     // Students only see announcements meant for 'all' or 'students'
     if (req.user?.role === 'student') {
       query += "WHERE target = 'all' OR target = 'students' ";
     }
-    
+
     query += 'ORDER BY created_at DESC LIMIT $1 OFFSET $2';
-    
+
     const result = await pool.query(query, [limit, offset]);
     res.json({ success: true, data: result.rows });
   } catch (err: any) {
@@ -2371,10 +2413,10 @@ app.get('/api/finance/fees/:studentId', authenticateToken, requireAdmin, async (
       WHERE f.student_id = $1
       LIMIT 1
     `, [studentId]);
-    
+
     const feeData = feeResult.rows[0];
     let payments: any[] = [];
-    
+
     if (feeData) {
       const paymentsResult = await pool.query(`
         SELECT * FROM fee_payments
@@ -2436,7 +2478,7 @@ app.post('/api/finance/fees/:studentId/pay', authenticateToken, requireAdmin, as
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
     `, [fee.id, studentId, payAmount, paymentMethod, transactionReference, remarks, paymentDate || new Date(), recordedBy || null]);
-    
+
     const paymentId = insertPayment.rows[0].id;
     const year = new Date().getFullYear();
     const generatedReceipt = `REC-${year}-${String(paymentId).padStart(6, '0')}`;
@@ -2483,7 +2525,7 @@ app.put('/api/finance/fees/:studentId/total', authenticateToken, requireAdmin, a
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    
+
     let feeResult = await client.query('SELECT * FROM fees WHERE student_id = $1 FOR UPDATE', [studentId]);
     let fee = feeResult.rows[0];
 
@@ -2498,7 +2540,7 @@ app.put('/api/finance/fees/:studentId/total', authenticateToken, requireAdmin, a
       const paid = parseFloat(fee.paid_amount);
       let newRemaining = newTotal - paid;
       if (newRemaining < 0) newRemaining = 0;
-      
+
       let status = 'partial';
       if (newRemaining === 0) status = 'paid';
       if (paid === 0 && newTotal > 0) status = 'unpaid';
@@ -2526,14 +2568,14 @@ app.put('/api/finance/fees/:studentId/total', authenticateToken, requireAdmin, a
 app.get('/api/student/:studentId/fees', authenticateToken, requireStudent, async (req, res) => {
   const { studentId } = req.params;
   const client = await pool.connect();
-  
+
   try {
     const studentCheck = await client.query('SELECT user_id FROM students WHERE id = $1', [studentId]);
-    if (studentCheck.rows.length === 0 || String(studentCheck.rows[0].user_id) !== String(req.user.id)) {
+    if (studentCheck.rows.length === 0 || String(studentCheck.rows[0].user_id) !== String(req.user?.id)) {
       client.release();
       return res.status(403).json({ success: false, error: 'Unauthorized: Can only view your own fees' });
     }
-    
+
     const feeResult = await client.query('SELECT * FROM fees WHERE student_id = $1 LIMIT 1', [studentId]);
     const feeData = feeResult.rows[0];
     let payments: any[] = [];

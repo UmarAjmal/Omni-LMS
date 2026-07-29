@@ -71,7 +71,7 @@ export default function AdminReportsPage() {
         ].map((tab) => (
           <Button
             key={tab.key}
-            variant={activeTab === tab.key ? "default" : "outline"}
+            variant={activeTab === tab.key ? "primary" : "outline"}
             onClick={() => setActiveTab(tab.key as any)}
           >
             <span className="material-symbols-outlined mr-2">{tab.icon}</span>
