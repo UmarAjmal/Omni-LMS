@@ -58,3 +58,28 @@ desktop.ini
 
 # misc
 .idea/
+
+# Android & iOS native platform folders
+/android
+/ios
+android/
+ios/
+
+# Android & Gradle build outputs
+.gradle/
+**/.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/.cxx/
+android/local.properties
+android/captures/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+
+# Capacitor web output
+www/
+**/www/
+

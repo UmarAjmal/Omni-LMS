@@ -5,8 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { NotificationCenter } from "./NotificationCenter";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
+import { apiClient } from "@/lib/apiClient";
 
 // ─────────────────────────────────────────
 // Nav link helper
@@ -83,7 +82,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
   const fetchPendingCount = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/training-applications/count`);
+      const res = await apiClient("/api/training-applications/count");
       const json = await res.json();
       if (json.success) setPendingAdmissions(json.count || 0);
     } catch {}
@@ -110,13 +109,8 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         const studentStr = localStorage.getItem("lms_student_info");
         const hasStudentInfo = studentStr && studentStr !== "undefined" && studentStr !== "null";
 
-        const lmsToken = localStorage.getItem("lms_token");
         if (!hasStudentInfo && uid) {
-          fetch(`${API_BASE_URL}/api/students/profile?userId=${uid}`, {
-            headers: {
-              "Authorization": lmsToken ? `Bearer ${lmsToken}` : ""
-            }
-          })
+          apiClient(`/api/students/profile?userId=${uid}`)
             .then((r) => r.json())
             .then((res) => {
               if (res.success && res.data) {
@@ -151,13 +145,8 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
         }
       } else if (role === "trainer") {
         setProfileIncomplete(false);
-        const lmsToken = localStorage.getItem("lms_token");
         if (uid) {
-          fetch(`${API_BASE_URL}/api/trainers/profile?userId=${uid}`, {
-            headers: {
-              "Authorization": lmsToken ? `Bearer ${lmsToken}` : ""
-            }
-          })
+          apiClient(`/api/trainers/profile?userId=${uid}`)
             .then((r) => r.json())
             .then((res) => {
               if (res.success && res.data) {

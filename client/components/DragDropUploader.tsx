@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { apiClient } from "@/lib/apiClient";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface DragDropUploaderProps {
   onUploadSuccess: (url: string) => void;

@@ -41,5 +41,19 @@ export async function apiClient(url: string, options: RequestInit = {}): Promise
     headers,
   };
 
-  return fetch(url, fetchOptions);
+  const isMobile =
+    process.env.NEXT_PUBLIC_BUILD_TARGET === "mobile" ||
+    (typeof window !== "undefined" &&
+      (window.location.protocol === "file:" ||
+        (window.location.hostname === "localhost" && window.location.port === "") ||
+        (window as any).Capacitor !== undefined));
+
+  let targetUrl = url;
+  if (isMobile && !url.startsWith("http://") && !url.startsWith("https://")) {
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://10.0.2.2:5000").replace(/\/$/, "");
+    const cleanPath = url.startsWith("/") ? url : `/${url}`;
+    targetUrl = `${baseUrl}${cleanPath}`;
+  }
+
+  return fetch(targetUrl, fetchOptions);
 }
