@@ -1,0 +1,14 @@
+{
+  "appId": "com.omnilearn.lms",
+  "appName": "OmniLearn LMS",
+  "webDir": "client/out",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

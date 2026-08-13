@@ -3,8 +3,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
+import { apiClient } from "@/lib/apiClient";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/Dialog";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface TaskAssignment {
   assignment_id: number;
@@ -33,7 +38,7 @@ export default function StudentTasksListPage() {
   const fetchTasks = useCallback(async (studentId: number) => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/students/${studentId}/tasks`);
+      const res = await apiClient(`/api/students/${studentId}/tasks`);
       const json = await res.json();
       if (json.success) {
         setAssignments(json.data || []);
@@ -51,6 +56,7 @@ export default function StudentTasksListPage() {
     const userId = localStorage.getItem("lms_user_id");
 
     const handleLogout = () => {
+      localStorage.removeItem("lms_token");
       localStorage.removeItem("lms_auth");
       localStorage.removeItem("lms_user_role");
       localStorage.removeItem("lms_user_id");
@@ -60,7 +66,7 @@ export default function StudentTasksListPage() {
 
     if (!infoStr || infoStr === "undefined" || infoStr === "null") {
       if (userId) {
-        fetch(`${API_BASE_URL}/api/students/profile?userId=${userId}`)
+        apiClient(`/api/students/profile?userId=${userId}`)
           .then(r => r.json())
           .then(json => {
             if (json.success && json.data) {
@@ -100,16 +106,16 @@ export default function StudentTasksListPage() {
   const gradedList = assignments.filter(a => a.status === "marked");
 
   const StatusBadge = ({ status }: { status: string }) => {
-    const map: Record<string, { label: string; className: string }> = {
-      pending: { label: "In Progress", className: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" },
-      completed: { label: "Submitted", className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-      marked: { label: "Graded", className: "bg-green-500/10 text-green-400 border-green-500/20" },
+    const map: Record<string, { label: string; variant: any }> = {
+      pending: { label: "In Progress", variant: "warning" },
+      completed: { label: "Submitted", variant: "default" },
+      marked: { label: "Graded", variant: "success" },
     };
-    const s = map[status] || { label: status, className: "bg-white/5 text-white/50 border-white/10" };
+    const s = map[status] || { label: status, variant: "secondary" };
     return (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${s.className}`}>
+      <Badge variant={s.variant} className="uppercase tracking-wider text-[10px]">
         {s.label}
-      </span>
+      </Badge>
     );
   };
 
@@ -122,278 +128,247 @@ export default function StudentTasksListPage() {
   };
 
   return (
-    <div className="relative text-xs font-sans text-white/90 space-y-6">
-      <style dangerouslySetInnerHTML={{__html: `
-        .glacier-card {
-          background: rgba(10, 20, 38, 0.72);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-        }
-        .th { color: rgba(206, 229, 255, 0.45); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; }
-        .tr-hover:hover { background: rgba(255, 255, 255, 0.02); }
-      `}} />
-
-      <div>
-        <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Milestone Objectives Registry</h2>
-        <p className="text-on-surface-variant font-light mt-1 font-sans text-xs">
-          Explore and audit your assigned batch milestones, grading criteria, and evaluator feedback logs.
-        </p>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      
+      <PageHeader 
+        title="Milestone Objectives Registry" 
+        description="Explore and audit your assigned batch milestones, grading criteria, and evaluator feedback logs." 
+        icon="fact_check"
+      />
 
       {isLoading ? (
-        <div className="glacier-card p-16 rounded-2xl text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto mb-3" />
-          <p className="text-on-surface-variant text-xs">Loading task registry...</p>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-500 font-medium text-sm">Loading task registry...</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           
           {/* List 1: Active In-Progress Tasks */}
-          <div className="glacier-card rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <Card className="overflow-hidden border-yellow-200 shadow-sm">
+            <div className="px-6 py-4 bg-yellow-50 border-b border-yellow-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white">Active Assignments</h3>
-                <p className="text-on-surface-variant text-[11px] mt-0.5">Tasks currently awaiting your implementation and summary submissions.</p>
+                <h3 className="text-base font-bold text-yellow-900">Active Assignments</h3>
+                <p className="text-yellow-700 text-sm mt-0.5">Tasks currently awaiting your implementation and summary submissions.</p>
               </div>
-              <span className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 font-bold text-[11px] px-3 py-1 rounded-full">
-                {activeList.length} Active
-              </span>
+              <Badge variant="warning" className="w-fit">{activeList.length} Active</Badge>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px]">
-                <thead>
-                  <tr className="border-b border-white/5 bg-[#0a1426]/30">
-                    <th className="px-6 py-3.5 th">Task Details</th>
-                    <th className="px-6 py-3.5 th">Assigned Track</th>
-                    <th className="px-6 py-3.5 th">Due Date</th>
-                    <th className="px-6 py-3.5 th">XP Reward</th>
-                    <th className="px-6 py-3.5 th text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {activeList.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-on-surface-variant/50 font-light">
-                        No active milestones assigned. Great job staying up to date!
-                      </td>
-                    </tr>
-                  ) : (
-                    activeList.map(a => (
-                      <tr key={a.assignment_id} className="tr-hover transition-colors">
-                        <td className="px-6 py-4">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTask(a)}
-                            className="font-bold text-white hover:text-primary hover:underline text-left cursor-pointer bg-transparent border-none p-0 focus:outline-none"
-                          >
-                            {a.task_name}
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 text-on-surface-variant">{a.course_label}</td>
-                        <td className="px-6 py-4 text-white/80">
-                          {a.due_date ? new Date(a.due_date).toLocaleDateString() : "No Limit"}
-                        </td>
-                        <td className="px-6 py-4 text-primary font-bold">{a.points} XP</td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => router.push("/student/submit-task")}
-                            className="px-3.5 py-2 bg-primary/10 border border-primary/25 hover:bg-primary/20 text-primary text-[10px] font-bold uppercase rounded-lg tracking-wider transition-all cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <span className="material-symbols-outlined text-[13px]">upload</span>
-                            Submit Proof
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Task Details</TableHead>
+                  <TableHead>Assigned Track</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>XP Reward</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      No active milestones assigned. Great job staying up to date!
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  activeList.map(a => (
+                    <TableRow key={a.assignment_id}>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTask(a)}
+                          className="font-bold text-gray-900 hover:text-blue-600 hover:underline text-left cursor-pointer transition-colors"
+                        >
+                          {a.task_name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{a.course_label}</TableCell>
+                      <TableCell className="text-gray-900 font-medium">
+                        {a.due_date ? new Date(a.due_date).toLocaleDateString() : "No Limit"}
+                      </TableCell>
+                      <TableCell className="text-blue-600 font-bold">{a.points} XP</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push("/student/submit-task")}
+                        >
+                          <span className="material-symbols-outlined mr-2 text-[18px]">upload</span>
+                          Submit Proof
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
 
           {/* List 2: Submitted / Awaiting review */}
-          <div className="glacier-card rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <Card className="overflow-hidden shadow-sm">
+            <div className="px-6 py-4 bg-blue-50 border-b border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white">Completions Submitted</h3>
-                <p className="text-on-surface-variant text-[11px] mt-0.5">Tasks you completed and uploaded. Evaluator reviews are pending.</p>
+                <h3 className="text-base font-bold text-blue-900">Completions Submitted</h3>
+                <p className="text-blue-700 text-sm mt-0.5">Tasks you completed and uploaded. Evaluator reviews are pending.</p>
               </div>
-              <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-[11px] px-3 py-1 rounded-full">
-                {submittedList.length} Under Review
-              </span>
+              <Badge variant="primary" className="w-fit">{submittedList.length} Under Review</Badge>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px]">
-                <thead>
-                  <tr className="border-b border-white/5 bg-[#0a1426]/30">
-                    <th className="px-6 py-3.5 th">Task Details</th>
-                    <th className="px-6 py-3.5 th">Assigned Track</th>
-                    <th className="px-6 py-3.5 th">Status</th>
-                    <th className="px-6 py-3.5 th">XP Value</th>
-                    <th className="px-6 py-3.5 th text-right">Audits</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {submittedList.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-on-surface-variant/50 font-light">
-                        No submissions pending review.
-                      </td>
-                    </tr>
-                  ) : (
-                    submittedList.map(a => (
-                      <tr key={a.assignment_id} className="tr-hover transition-colors">
-                        <td className="px-6 py-4">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTask(a)}
-                            className="font-bold text-white hover:text-primary hover:underline text-left cursor-pointer bg-transparent border-none p-0 focus:outline-none"
-                          >
-                            {a.task_name}
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 text-on-surface-variant">{a.course_label}</td>
-                        <td className="px-6 py-4"><StatusBadge status={a.status} /></td>
-                        <td className="px-6 py-4 text-white/80">{a.points} XP</td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTask(a)}
-                            className="p-1 rounded bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-white transition-all cursor-pointer inline-flex items-center justify-center"
-                          >
-                            <span className="material-symbols-outlined text-base">visibility</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Task Details</TableHead>
+                  <TableHead>Assigned Track</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>XP Value</TableHead>
+                  <TableHead className="text-right">Audits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {submittedList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      No submissions pending review.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  submittedList.map(a => (
+                    <TableRow key={a.assignment_id}>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTask(a)}
+                          className="font-bold text-gray-900 hover:text-blue-600 hover:underline text-left cursor-pointer transition-colors"
+                        >
+                          {a.task_name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{a.course_label}</TableCell>
+                      <TableCell><StatusBadge status={a.status} /></TableCell>
+                      <TableCell className="text-gray-900 font-medium">{a.points} XP</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedTask(a)}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">visibility</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
 
           {/* List 3: Graded Milestones */}
-          <div className="glacier-card rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <Card className="overflow-hidden border-emerald-200 shadow-sm">
+            <div className="px-6 py-4 bg-emerald-50 border-b border-emerald-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white">Graded Deliverables</h3>
-                <p className="text-on-surface-variant text-[11px] mt-0.5">Tasks completed, marked, and officially evaluated by senior trainers.</p>
+                <h3 className="text-base font-bold text-emerald-900">Graded Deliverables</h3>
+                <p className="text-emerald-700 text-sm mt-0.5">Tasks completed, marked, and officially evaluated by senior trainers.</p>
               </div>
-              <span className="bg-green-500/10 border border-green-500/20 text-green-400 font-bold text-[11px] px-3 py-1 rounded-full">
-                {gradedList.length} Graded
-              </span>
+              <Badge variant="success" className="w-fit">{gradedList.length} Graded</Badge>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px]">
-                <thead>
-                  <tr className="border-b border-white/5 bg-[#0a1426]/30">
-                    <th className="px-6 py-3.5 th">Task Details</th>
-                    <th className="px-6 py-3.5 th">Assigned Track</th>
-                    <th className="px-6 py-3.5 th">Score Grade</th>
-                    <th className="px-6 py-3.5 th">Graded Date</th>
-                    <th className="px-6 py-3.5 th text-right">Audits</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {gradedList.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-8 text-on-surface-variant/50 font-light">
-                        No graded deliverables logged yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    gradedList.map(a => (
-                      <tr key={a.assignment_id} className="tr-hover transition-colors">
-                        <td className="px-6 py-4">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTask(a)}
-                            className="font-bold text-white hover:text-primary hover:underline text-left cursor-pointer bg-transparent border-none p-0 focus:outline-none"
-                          >
-                            {a.task_name}
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 text-on-surface-variant">{a.course_label}</td>
-                        <td className="px-6 py-4 text-sm font-extrabold text-primary">
-                          {a.score}%
-                        </td>
-                        <td className="px-6 py-4 text-on-surface-variant/80">
-                          {a.graded_at ? new Date(a.graded_at).toLocaleDateString() : "—"}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTask(a)}
-                            className="px-3.5 py-1.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-lg transition-all cursor-pointer text-[10px] uppercase inline-flex items-center gap-1.5"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">speaker_notes</span>
-                            Feedback
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Task Details</TableHead>
+                  <TableHead>Assigned Track</TableHead>
+                  <TableHead>Score Grade</TableHead>
+                  <TableHead>Graded Date</TableHead>
+                  <TableHead className="text-right">Audits</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {gradedList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      No graded deliverables logged yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  gradedList.map(a => (
+                    <TableRow key={a.assignment_id}>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTask(a)}
+                          className="font-bold text-gray-900 hover:text-blue-600 hover:underline text-left cursor-pointer transition-colors"
+                        >
+                          {a.task_name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{a.course_label}</TableCell>
+                      <TableCell className="text-lg font-extrabold text-blue-600">
+                        {a.score}%
+                      </TableCell>
+                      <TableCell className="text-gray-500 font-medium">
+                        {a.graded_at ? new Date(a.graded_at).toLocaleDateString() : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedTask(a)}
+                        >
+                          <span className="material-symbols-outlined mr-2 text-[18px]">speaker_notes</span>
+                          Feedback
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
 
         </div>
       )}
 
       {/* Task Details Dialog Modal */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="glacier-card w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
-            
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/5 bg-[#101f38] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-xl">info</span>
-                <div>
-                  <h4 className="text-sm font-bold text-white">Milestone Specifications</h4>
-                  <p className="text-[10px] text-on-surface-variant">Review task specification guidelines and feedback</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedTask(null)}
-                className="text-on-surface-variant hover:text-white p-1 rounded transition-colors cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">close</span>
-              </button>
-            </div>
+        <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-600">info</span>
+                Milestone Specifications
+              </DialogTitle>
+              <DialogDescription>
+                Review task specification guidelines and feedback
+              </DialogDescription>
+            </DialogHeader>
 
-            {/* Modal Content */}
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-6 mt-4">
               
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Task Name</span>
-                <p className="text-xs font-bold text-white bg-[#0a1426]/30 p-2.5 rounded-lg border border-white/5">{selectedTask.task_name}</p>
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Task Name</span>
+                <p className="text-sm font-bold text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedTask.task_name}</p>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Description &amp; Guidelines</span>
-                <p className="text-xs text-on-surface-variant/90 leading-relaxed font-light whitespace-pre-wrap bg-[#0a1426]/30 p-3 rounded-lg border border-white/5">
+              <div>
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Description &amp; Guidelines</span>
+                <p className="text-sm text-gray-700 leading-relaxed font-normal whitespace-pre-wrap bg-gray-50 p-4 rounded-lg border border-gray-100 min-h-[100px]">
                   {selectedTask.task_description || "No description provided."}
                 </p>
               </div>
 
               {getReferenceLinks(selectedTask).length > 0 && (
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Reference Links</span>
-                  <div className="space-y-1">
+                <div>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Reference Links</span>
+                  <div className="space-y-2">
                     {getReferenceLinks(selectedTask).map((link, idx) => (
                       <a
                         key={idx}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-white/80"
+                        className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm rounded-lg text-sm text-gray-900 font-medium transition-all group"
                       >
-                        <span className="material-symbols-outlined text-primary text-sm">link</span>
+                        <span className="material-symbols-outlined text-blue-500 text-[20px] group-hover:scale-110 transition-transform">link</span>
                         <span className="truncate flex-1">{link.title}</span>
                       </a>
                     ))}
@@ -403,19 +378,21 @@ export default function StudentTasksListPage() {
 
               {/* Score and feedback if graded */}
               {selectedTask.status === "marked" && (
-                <div className="pt-4 border-t border-white/5 space-y-3">
-                  <div className="flex justify-between items-center bg-green-500/10 border border-green-500/20 rounded-xl p-3.5">
+                <div className="pt-6 border-t border-gray-100 space-y-4">
+                  <div className="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-xl p-5">
                     <div>
-                      <p className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Evaluation Score</p>
-                      <p className="text-2xl font-black text-white mt-1">{selectedTask.score}%</p>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Evaluation Score</p>
+                      <p className="text-3xl font-black text-emerald-900">{selectedTask.score}%</p>
                     </div>
-                    <span className="material-symbols-outlined text-green-400 text-3xl">workspace_premium</span>
+                    <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-emerald-600 text-[28px]">workspace_premium</span>
+                    </div>
                   </div>
 
                   {selectedTask.feedback && (
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Evaluator Feedback</span>
-                      <blockquote className="text-xs text-on-surface-variant/90 border-l-2 border-primary/40 pl-4 py-1 italic leading-relaxed">
+                    <div>
+                      <span className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block">Evaluator Feedback</span>
+                      <blockquote className="text-sm text-gray-700 border-l-4 border-blue-500 bg-blue-50/50 pl-4 py-3 pr-4 rounded-r-lg italic leading-relaxed">
                         "{selectedTask.feedback}"
                       </blockquote>
                     </div>
@@ -424,8 +401,8 @@ export default function StudentTasksListPage() {
               )}
 
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
     </div>

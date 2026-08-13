@@ -4,8 +4,13 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
+import { apiClient } from "@/lib/apiClient";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
+import { Input, Select } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Student {
   id: number;
@@ -29,6 +34,7 @@ export default function StudentsPage() {
   const [pendingApplicantsCount, setPendingApplicantsCount] = useState(0);
 
   // Filters State
+  const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
 
@@ -36,23 +42,20 @@ export default function StudentsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Students
-        const studentsRes = await fetch(`${API_BASE_URL}/api/students`);
+        const studentsRes = await apiClient(`/api/students`);
         const studentsJson = await studentsRes.json();
         if (studentsJson.success) {
           setStudents(studentsJson.data);
           setFilteredStudents(studentsJson.data);
         }
 
-        // 2. Fetch Courses
-        const coursesRes = await fetch(`${API_BASE_URL}/api/courses`);
+        const coursesRes = await apiClient(`/api/courses`);
         const coursesJson = await coursesRes.json();
         if (coursesJson.success) {
           setAvailableCourses(coursesJson.data);
         }
 
-        // 3. Fetch pending training applications count
-        const appsRes = await fetch(`${API_BASE_URL}/api/training-applications/count`);
+        const appsRes = await apiClient(`/api/training-applications/count`);
         const appsJson = await appsRes.json();
         if (appsJson.success) {
           setPendingApplicantsCount(appsJson.count);
@@ -64,9 +67,8 @@ export default function StudentsPage() {
       }
     };
     fetchData();
-    // Poll every 30 seconds for new applications
     const interval = setInterval(() => {
-      fetch(`${API_BASE_URL}/api/training-applications/count`)
+      apiClient(`/api/training-applications/count`)
         .then(r => r.json())
         .then(d => { if (d.success) setPendingApplicantsCount(d.count); })
         .catch(() => {});
@@ -74,7 +76,6 @@ export default function StudentsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Stable deterministic dynamic student mock parameters based on ID
   const getStudentPaymentStatus = (id: number) => {
     const statuses = ["Paid", "Partial", "Unpaid"];
     return statuses[id % statuses.length];
@@ -88,85 +89,72 @@ export default function StudentsPage() {
 
   const getStudentAvatar = (index: number) => {
     const avatars = [
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCkrg1w2_6vKacVMQL6osveRCQ1WSGupSYxo3AoLL8rnZS5gopYelH_tI5vTRQpTiEmXYnUj6uetUcTQ7kmbhdWatOBAG3JVIwiTXV6DBAMNIOrBrXGbCQsspYzd-u-1trTn3C-e_j0uXBzs6jmVdZ_gzD0Nt7pt7Ajj0EK4WBhdYq7c_5Z1gc1KA0C4UcqCLLkBDkFnwZqYk1VR2DspoCRx3wF6nlSbmIlN6heo26LB7gyv9_wJMOt62pSGw9_WzxdJhBVMlJybrkx", // Elena
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBqg6lDqFufGA9x0LwbeSh0Mr3Uc1oXYQlvy_j5H_g9nVnr3W4x8WlfILXtJiBevVZ3_c1aeHNxmCv1LaKbUQNP1E2vI50qJ3TeZ6oUTlm18EGEdmv13wUbgXPk-DYCBIci6nKiOKu2dRfiZ-mPZyFdZ2sVldoSx9CvvMZlXMnfiAJQZKll-Sj53cFwyDU3xbjLh6BzNfsQZCg4p_DQZ6UxBJSRsRMIbvzS2jmxrUioshSTCpE-QH3iJ84-txlAB-KbdxYt992qMT4R", // Marcus
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDa0Oqlh4FijmMIUgyEIAjtq6L6al5O1wWksfJDlypBQ5Gt4Y1VIpXxaKypW9f5gx3vUpGRas-T4EQOnI_tOccnQDyQ_cOWzVseRuRM1w7cajgYlskkYBQEXfi-SZDPaeFmVAGA31V1NJhtsXBwWFl_DNVzN1TwWecR7rnowkpkQnXZQ-IYLTpUJeMqmZwIjY-ZPSjolb8f5mu4P_hMT5zIShEnUuP1Z_C9ypdGiQ5iWsmBSvLcHFsDc9ceoCrpe_GPzxEAGXCRbeJZ"  // Amara
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCkrg1w2_6vKacVMQL6osveRCQ1WSGupSYxo3AoLL8rnZS5gopYelH_tI5vTRQpTiEmXYnUj6uetUcTQ7kmbhdWatOBAG3JVIwiTXV6DBAMNIOrBrXGbCQsspYzd-u-1trTn3C-e_j0uXBzs6jmVdZ_gzD0Nt7pt7Ajj0EK4WBhdYq7c_5Z1gc1KA0C4UcqCLLkBDkFnwZqYk1VR2DspoCRx3wF6nlSbmIlN6heo26LB7gyv9_wJMOt62pSGw9_WzxdJhBVMlJybrkx",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBqg6lDqFufGA9x0LwbeSh0Mr3Uc1oXYQlvy_j5H_g9nVnr3W4x8WlfILXtJiBevVZ3_c1aeHNxmCv1LaKbUQNP1E2vI50qJ3TeZ6oUTlm18EGEdmv13wUbgXPk-DYCBIci6nKiOKu2dRfiZ-mPZyFdZ2sVldoSx9CvvMZlXMnfiAJQZKll-Sj53cFwyDU3xbjLh6BzNfsQZCg4p_DQZ6UxBJSRsRMIbvzS2jmxrUioshSTCpE-QH3iJ84-txlAB-KbdxYt992qMT4R",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDa0Oqlh4FijmMIUgyEIAjtq6L6al5O1wWksfJDlypBQ5Gt4Y1VIpXxaKypW9f5gx3vUpGRas-T4EQOnI_tOccnQDyQ_cOWzVseRuRM1w7cajgYlskkYBQEXfi-SZDPaeFmVAGA31V1NJhtsXBwWFl_DNVzN1TwWecR7rnowkpkQnXZQ-IYLTpUJeMqmZwIjY-ZPSjolb8f5mu4P_hMT5zIShEnUuP1Z_C9ypdGiQ5iWsmBSvLcHFsDc9ceoCrpe_GPzxEAGXCRbeJZ"
     ];
     return avatars[index % avatars.length];
   };
 
-  // Perform dynamic student filtering
   useEffect(() => {
     let result = [...students];
 
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        s => s.first_name.toLowerCase().includes(q) || 
+             s.last_name.toLowerCase().includes(q) || 
+             s.email.toLowerCase().includes(q) || 
+             s.enrollment_id.toLowerCase().includes(q)
+      );
+    }
+
     if (courseFilter) {
-      result = result.filter((s) => {
-        if (!s.program) return false;
-        return s.program.toLowerCase() === courseFilter.toLowerCase();
-      });
+      result = result.filter((s) => s.program?.toLowerCase() === courseFilter.toLowerCase());
     }
 
     if (paymentFilter) {
-      result = result.filter((s) => {
-        const status = getStudentPaymentStatus(s.id);
-        return status.toLowerCase() === paymentFilter.toLowerCase();
-      });
+      result = result.filter((s) => getStudentPaymentStatus(s.id).toLowerCase() === paymentFilter.toLowerCase());
     }
 
     setFilteredStudents(result);
-  }, [courseFilter, paymentFilter, students]);
+  }, [searchQuery, courseFilter, paymentFilter, students]);
 
-  // Dynamic aggregates calculation
   const totalCount = students.length;
   const paidCount = students.filter((s) => getStudentPaymentStatus(s.id) === "Paid").length;
   const paidPercentage = students.length ? Math.round((paidCount / students.length) * 100) : 0;
-  const unpaidFeesCount = students.filter((s) => getStudentPaymentStatus(s.id) === "Unpaid").length;
 
-  // Intelligent WhatsApp redirection deep-link / web fallback handler
   const handleWhatsAppRedirect = (e: React.MouseEvent, phone: string | undefined) => {
-    e.stopPropagation(); // Prevent row click navigation
+    e.stopPropagation();
     
     if (!phone) {
-      toast.warning("No contact number associated with this student registry.");
+      toast.warning("No contact number associated with this student.");
       return;
     }
 
-    // Prepend country code and strip non-numeric parameters
     let cleanPhone = phone.replace(/[^0-9]/g, "");
-    if (cleanPhone.startsWith("0")) {
-      cleanPhone = "92" + cleanPhone.slice(1);
-    }
-    // If not starting with country code, assume Pakistan prefix standard
-    if (!cleanPhone.startsWith("92") && cleanPhone.length === 10) {
-      cleanPhone = "92" + cleanPhone;
-    }
+    if (cleanPhone.startsWith("0")) cleanPhone = "92" + cleanPhone.slice(1);
+    if (!cleanPhone.startsWith("92") && cleanPhone.length === 10) cleanPhone = "92" + cleanPhone;
 
     const deepLink = `whatsapp://send?phone=${cleanPhone}`;
     const webLink = `https://web.whatsapp.com/send?phone=${cleanPhone}`;
 
-    toast.info("Launching WhatsApp deep-link connection...", { autoClose: 2000 });
+    toast.info("Connecting to WhatsApp...", { autoClose: 2000 });
 
-    // 1. Create a temporary hidden iframe to fire deep-link protocol safely
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
     iframe.src = deepLink;
     document.body.appendChild(iframe);
 
-    // Remove iframe after short delay
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 300);
+    setTimeout(() => document.body.removeChild(iframe), 300);
 
-    // 2. Fallback checking: If window is still focused after 1.5s, launch web portal instead
     const start = Date.now();
     const timer = setTimeout(() => {
       if (document.hasFocus() && Date.now() - start < 2000) {
-        toast.info("WhatsApp app not detected. Launching WhatsApp Web portal...", { autoClose: 2000 });
         window.open(webLink, "_blank");
       }
     }, 1500);
 
-    // Cancel fallback if window blurs (meaning app launched successfully!)
     const handleBlur = () => {
       clearTimeout(timer);
       window.removeEventListener("blur", handleBlur);
@@ -174,14 +162,13 @@ export default function StudentsPage() {
     window.addEventListener("blur", handleBlur);
   };
 
-  // High-fidelity Excel workbook exporter dynamically loaded from CDN
   const handleExcelExport = async () => {
     if (filteredStudents.length === 0) {
       toast.warning("No student records available to export.");
       return;
     }
 
-    toast.info("Preparing Excel spreadsheet compiler...", { autoClose: 1500 });
+    toast.info("Preparing Excel export...", { autoClose: 1500 });
 
     try {
       const loadSheetJS = () => {
@@ -201,8 +188,7 @@ export default function StudentsPage() {
       await loadSheetJS();
       const XLSX = (window as any).XLSX;
 
-      // Map rows with clean corporate headings
-      const worksheetData = filteredStudents.map((s, index) => ({
+      const worksheetData = filteredStudents.map((s) => ({
         "Enrollment ID": s.enrollment_id,
         "Student Name": `${s.first_name} ${s.last_name}`,
         "Email Address": s.email,
@@ -217,7 +203,6 @@ export default function StudentsPage() {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "LMS Enrolled Students");
 
-      // Auto-fit column widths dynamically
       const maxColWidths = Object.keys(worksheetData[0]).map((key) => {
         let maxLen = key.length;
         worksheetData.forEach((row: any) => {
@@ -228,7 +213,6 @@ export default function StudentsPage() {
       });
       worksheet["!cols"] = maxColWidths;
 
-      // Download spreadsheet
       XLSX.writeFile(workbook, "OmniLearn_Registered_Students.xlsx");
       toast.success("Spreadsheet downloaded successfully!");
     } catch (err) {
@@ -238,261 +222,220 @@ export default function StudentsPage() {
   };
 
   return (
-    <div className="relative">
-      <style dangerouslySetInnerHTML={{__html: `
-        .student-glass-panel {
-            background: rgba(20, 33, 61, 0.7);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 50px rgba(4, 18, 46, 0.4);
-        }
-      `}} />
-
-      <div className="p-2 md:p-8 flex-1 animate-fade-in relative z-10 w-full">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-          <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">Registered Students</h2>
-            <p className="text-on-surface-variant font-light text-base mt-2">Manage enrollments and monitor academic progression across the institution.</p>
-          </div>
-          <button 
-            type="button"
-            onClick={() => router.push("/students/applicants")}
-            className="relative bg-primary text-black font-bold px-8 py-4 rounded-xl flex items-center gap-3 shadow-[0_15px_30px_rgba(252,163,17,0.3)] hover:shadow-[0_20px_40px_rgba(252,163,17,0.4)] active:scale-95 transition-all cursor-pointer select-none"
-          >
-            <span className="material-symbols-outlined">person_add</span>
-            <span className="font-semibold text-sm tracking-widest uppercase">New Applicants</span>
-            {pendingApplicantsCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg animate-pulse">
-                {pendingApplicantsCount > 99 ? "99+" : pendingApplicantsCount}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Dashboard Filters / Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="student-glass-panel p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined">group</span>
-            </div>
-            <div>
-              <p className="text-on-surface-variant text-[12px] uppercase tracking-widest font-semibold">Total Enrolled</p>
-              <p className="text-2xl font-bold text-white">{isLoading ? "..." : totalCount.toLocaleString()}</p>
-            </div>
-          </div>
-          <div className="student-glass-panel p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400 shrink-0">
-              <span className="material-symbols-outlined">payments</span>
-            </div>
-            <div>
-              <p className="text-on-surface-variant text-[12px] uppercase tracking-widest font-semibold">Paid Status</p>
-              <p className="text-2xl font-bold text-white">{isLoading ? "..." : `${paidPercentage}%`}</p>
-            </div>
-          </div>
-          <div className="student-glass-panel p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400 shrink-0">
-              <span className="material-symbols-outlined">trending_up</span>
-            </div>
-            <div>
-              <p className="text-on-surface-variant text-[12px] uppercase tracking-widest font-semibold">Avg. Grade</p>
-              <p className="text-2xl font-bold text-white">{isLoading ? "..." : "A- (3.85)"}</p>
-            </div>
-          </div>
-          <div className="student-glass-panel p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 shrink-0">
-              <span className="material-symbols-outlined">pending_actions</span>
-            </div>
-            <div>
-              <p className="text-on-surface-variant text-[12px] uppercase tracking-widest font-semibold">Unpaid Fees</p>
-              <p className="text-2xl font-bold text-white">{isLoading ? "..." : unpaidFeesCount}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Table Filters Glass */}
-        <div className="student-glass-panel p-6 rounded-t-3xl border-b-0 flex flex-col lg:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-            <div className="relative min-w-[200px] w-full sm:w-auto">
-              <select 
-                value={courseFilter}
-                onChange={(e) => setCourseFilter(e.target.value)}
-                className="w-full bg-[#14213D] border border-white/10 rounded-lg py-3.5 pl-4 pr-10 appearance-none text-white focus:outline-none focus:border-primary/50 cursor-pointer text-sm font-semibold"
-              >
-                <option value="">All Courses</option>
-                {availableCourses.map((c) => (
-                  <option key={c.id} value={c.title}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
-            </div>
-            <div className="relative min-w-[200px] w-full sm:w-auto">
-              <select 
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-                className="w-full bg-[#14213D] border border-white/10 rounded-lg py-3.5 pl-4 pr-10 appearance-none text-white focus:outline-none focus:border-primary/50 cursor-pointer text-sm font-semibold"
-              >
-                <option value="">Payment Status</option>
-                <option value="paid">Paid</option>
-                <option value="partial">Partial</option>
-                <option value="unpaid">Unpaid</option>
-              </select>
-              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
-            </div>
-          </div>
-          <div className="flex flex-col w-full lg:w-auto sm:flex-row items-center gap-3">
-            <button 
-              type="button"
-              onClick={() => { setCourseFilter(""); setPaymentFilter(""); }}
-              className="w-full sm:w-auto flex justify-center items-center gap-2 px-4 py-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all text-on-surface-variant cursor-pointer select-none text-xs font-semibold uppercase tracking-wider"
-            >
-              <span className="material-symbols-outlined text-base">filter_list</span>
-              <span>Reset Filters</span>
-            </button>
-            <button 
-              type="button"
-              onClick={handleExcelExport}
-              className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-3 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary transition-all rounded-lg cursor-pointer select-none text-xs font-semibold uppercase tracking-wider"
-            >
-              <span className="material-symbols-outlined text-base">download</span>
-              <span>Export Excel</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Professional Data Table */}
-        <div className="student-glass-panel rounded-b-3xl overflow-hidden border-t-0 shadow-2xl">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[800px]">
-              <thead>
-                <tr className="bg-white/5 border-b border-white/10">
-                  <th className="px-8 py-5 text-sm font-semibold text-on-surface-variant uppercase tracking-widest">Student Name</th>
-                  <th className="px-6 py-5 text-sm font-semibold text-on-surface-variant uppercase tracking-widest">Registered Course</th>
-                  <th className="px-6 py-5 text-sm font-semibold text-on-surface-variant uppercase tracking-widest">Payment Status</th>
-                  <th className="px-6 py-5 text-sm font-semibold text-on-surface-variant uppercase tracking-widest">Performance</th>
-                  <th className="px-8 py-5 text-sm font-semibold text-on-surface-variant uppercase tracking-widest text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-16">
-                      <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto mb-3" />
-                      <p className="text-on-surface-variant text-sm font-light">Loading enrolled student list...</p>
-                    </td>
-                  </tr>
-                ) : filteredStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-16 text-on-surface-variant font-light">
-                      No registered students found matching your selected criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStudents.map((s, index) => {
-                    const payment = getStudentPaymentStatus(s.id);
-                    const perf = getStudentPerformance(s.id);
-                    const avatar = s.avatar_url || getStudentAvatar(index);
-
-                    const paymentStyles: Record<string, string> = {
-                      Paid: "bg-green-500/10 text-green-400 border-green-500/20",
-                      Partial: "bg-primary/10 text-primary border-primary/20",
-                      Unpaid: "bg-red-500/10 text-red-500 border-red-500/20"
-                    };
-
-                    const dotStyles: Record<string, string> = {
-                      Paid: "bg-green-400",
-                      Partial: "bg-primary",
-                      Unpaid: "bg-red-400"
-                    };
-
-                    const progressColor = perf.percentage >= 85 ? "bg-primary shadow-[0_0_8px_rgba(252,163,17,0.6)]" : perf.percentage >= 65 ? "bg-amber-200" : "bg-red-500";
-
-                    return (
-                      <tr 
-                        key={s.id} 
-                        className="hover:bg-white/5 transition-colors group cursor-pointer hover:translate-x-1 duration-200"
-                        onClick={() => router.push(`/students/${s.id}`)}
-                      >
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="relative shrink-0">
-                              <img alt="Student Profile" className="w-12 h-12 rounded-full border border-white/10 group-hover:border-primary/50 transition-all object-cover" src={avatar} />
-                              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#000000] rounded-full"></span>
-                            </div>
-                            <div>
-                              <p className="text-white font-bold text-base">{s.first_name} {s.last_name}</p>
-                              <p className="text-on-surface-variant/60 text-xs">{s.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-6">
-                          <span className="text-white font-medium block">{s.program || "General Education"}</span>
-                          <span className="text-xs text-on-surface-variant/50">ID: {s.enrollment_id}</span>
-                        </td>
-                        <td className="px-6 py-6">
-                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-widest ${paymentStyles[payment] || paymentStyles.Paid}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${dotStyles[payment] || dotStyles.Paid}`}></span>
-                            {payment}
-                          </div>
-                        </td>
-                        <td className="px-6 py-6">
-                          <div className="w-32">
-                            <div className="flex justify-between items-center mb-1.5">
-                              <span className="text-xs text-white font-bold">{perf.percentage}%</span>
-                              <span className={`text-[10px] uppercase font-bold tracking-wider ${perf.label === "At Risk" ? "text-red-400" : "text-on-surface-variant"}`}>{perf.label}</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                              <div className={`h-full ${progressColor}`} style={{ width: `${perf.percentage}%` }}></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-3">
-                            {/* Round styled WhatsApp Icon Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => handleWhatsAppRedirect(e, s.phone || "03001234567")}
-                              className="w-9 h-9 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 flex items-center justify-center transition-all cursor-pointer select-none"
-                              title="Connect on WhatsApp"
-                            >
-                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.058 5.248 5.303 0 11.748 0c3.122.001 6.059 1.219 8.274 3.435s3.43 5.155 3.43 8.278c-.004 6.495-5.248 11.743-11.693 11.743-2.001-.001-3.967-.514-5.707-1.492L0 24zm6.59-4.846c1.62.962 3.21 1.468 4.975 1.47 5.434 0 9.85-4.409 9.853-9.83.002-2.624-1.02-5.09-2.875-6.948-1.855-1.859-4.325-2.883-6.953-2.884-5.438 0-9.855 4.41-9.858 9.832-.001 1.83.499 3.518 1.446 5.107L1.9 22.083l4.747-1.929zm12.39-7.234c-.308-.154-1.82-.9-2.102-1.002-.283-.103-.49-.155-.694.154-.205.31-.794.99-.973 1.196-.179.206-.357.23-.665.077-.308-.154-1.3-.478-2.476-1.527-.914-.815-1.53-1.82-1.71-2.128-.18-.308-.019-.475.135-.629.138-.138.308-.36.462-.54.154-.18.206-.309.308-.514.103-.206.051-.385-.026-.54-.077-.154-.694-1.671-.951-2.29-.25-.6-.524-.52-.719-.53h-.615c-.205 0-.54.077-.822.385-.282.31-1.077 1.053-1.077 2.57 0 1.516 1.102 2.98 1.256 3.186.154.205 2.169 3.31 5.253 4.64.734.317 1.307.506 1.753.647.738.234 1.41.201 1.942.121.593-.09 1.82-.743 2.076-1.46.257-.718.257-1.334.18-1.46-.077-.127-.282-.205-.59-.359z"/>
-                              </svg>
-                            </button>
-                            <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-white/5 rounded-lg transition-all" onClick={(e) => { e.stopPropagation(); }}>
-                              <span className="material-symbols-outlined text-lg">more_vert</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Footing */}
-          <div className="p-6 bg-white/5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm font-semibold tracking-wider text-on-surface-variant">Showing <span className="text-white">1 - {filteredStudents.length}</span> of {filteredStudents.length} students</p>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <button className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-on-surface-variant disabled:opacity-30" disabled>
-                <span className="material-symbols-outlined">chevron_left</span>
-              </button>
-              <button className="w-10 h-10 rounded-lg bg-primary text-black flex items-center justify-center font-bold">1</button>
-              <button className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-on-surface-variant disabled:opacity-30" disabled>
-                <span className="material-symbols-outlined">chevron_right</span>
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Registered Students" 
+          description="Manage enrollments and monitor academic progression across the institution." 
+        />
+        <Button onClick={() => router.push("/students/applicants")} className="shrink-0 relative">
+          <span className="material-symbols-outlined mr-2">person_add</span>
+          New Applicants
+          {pendingApplicantsCount > 0 && (
+            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm">
+              {pendingApplicantsCount > 99 ? "99+" : pendingApplicantsCount}
+            </span>
+          )}
+        </Button>
       </div>
 
-      {/* Decorative Elements */}
-      <div className="fixed bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full pointer-events-none -z-10"></div>
-      <div className="fixed top-[-100px] left-[-100px] w-[500px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none -z-10"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+              <span className="material-symbols-outlined text-[24px]">group</span>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Enrolled</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : totalCount.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+              <span className="material-symbols-outlined text-[24px]">payments</span>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid Status</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : `${paidPercentage}%`}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 shrink-0">
+              <span className="material-symbols-outlined text-[24px]">trending_up</span>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg. Grade</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : "A- (3.85)"}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 shrink-0">
+              <span className="material-symbols-outlined text-[24px]">award_star</span>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Top Performers</p>
+              <p className="text-2xl font-bold text-gray-900">{isLoading ? "..." : Math.floor(totalCount * 0.05).toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between bg-gray-50/50 rounded-t-xl">
+          <div className="flex items-center gap-4 w-full md:w-auto flex-wrap">
+            <div className="relative w-full md:w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+              <Input
+                placeholder="Search students..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white"
+              />
+            </div>
+            <Select
+              value={courseFilter}
+              onChange={(e) => setCourseFilter(e.target.value)}
+              className="w-full md:w-48 bg-white"
+            >
+              <option value="">All Programs</option>
+              {availableCourses.map((c: any) => (
+                <option key={c.id} value={c.title}>{c.title}</option>
+              ))}
+            </Select>
+            <Select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="w-full md:w-48 bg-white"
+            >
+              <option value="">All Payment Statuses</option>
+              <option value="Paid">Fully Paid</option>
+              <option value="Partial">Partial Payment</option>
+              <option value="Unpaid">Unpaid / Arrears</option>
+            </Select>
+          </div>
+          <Button variant="outline" onClick={handleExcelExport} className="w-full md:w-auto shrink-0 bg-white">
+            <span className="material-symbols-outlined mr-2">download</span>
+            Export CSV
+          </Button>
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Program</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Performance</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="inline-flex flex-col items-center gap-3">
+                    <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+                    <span className="text-gray-500 font-medium">Loading records...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredStudents.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-12">
+                  <div className="inline-flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+                      <span className="material-symbols-outlined text-[24px]">search_off</span>
+                    </div>
+                    <span className="text-gray-500 font-medium">No students found matching your criteria.</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredStudents.map((student, i) => {
+                const pStatus = getStudentPaymentStatus(student.id);
+                const perf = getStudentPerformance(student.id);
+                const avatar = student.avatar_url || getStudentAvatar(i);
+
+                return (
+                  <TableRow key={student.id} className="cursor-pointer group hover:bg-gray-50" onClick={() => router.push(`/students/${student.id}`)}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <img src={avatar} alt="" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                        <div>
+                          <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{student.first_name} {student.last_name}</p>
+                          <p className="text-xs text-gray-500 font-mono mt-0.5">{student.enrollment_id}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm text-gray-600 flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] text-gray-400">mail</span>
+                          {student.email}
+                        </span>
+                        {student.phone && (
+                          <span className="text-sm text-gray-600 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[14px] text-gray-400">call</span>
+                            {student.phone}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium text-gray-700 bg-gray-100 px-2.5 py-1 rounded-md">{student.program || "General Edu"}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={pStatus === "Paid" ? "success" : pStatus === "Partial" ? "warning" : "danger"}
+                      >
+                        {pStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1.5 w-32">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-gray-700">{perf.percentage}%</span>
+                          <span className="text-gray-500">{perf.label}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${perf.percentage >= 90 ? 'bg-emerald-500' : perf.percentage >= 75 ? 'bg-blue-500' : 'bg-red-500'}`}
+                            style={{ width: `${perf.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={(e) => handleWhatsAppRedirect(e, student.phone)}
+                          className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                          title="Message on WhatsApp"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">chat</span>
+                        </button>
+                        <button
+                          className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                          title="View Profile"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

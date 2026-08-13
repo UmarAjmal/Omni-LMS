@@ -2,8 +2,9 @@
 
 import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
+import { apiClient } from "@/lib/apiClient";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://omnilearn-lms.onrender.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface DragDropUploaderProps {
   onUploadSuccess: (url: string) => void;
@@ -44,26 +45,36 @@ export default function DragDropUploader({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = async () => {
-        const base64Data = reader.result as string;
-        
-        // Upload to server endpoint
-        const res = await fetch(`${API_BASE_URL}/api/upload`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            base64Data
-          })
-        });
+        try {
+          const base64Data = reader.result as string;
+          
+          // Upload to server endpoint
+          const token = typeof window !== "undefined" ? localStorage.getItem("lms_token") : null;
+          const res = await apiClient(`/api/upload`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              filename: file.name,
+              base64Data
+            })
+          });
 
-        const json = await res.json();
-        if (res.ok && json.success && json.url) {
-          toast.success("Image uploaded and committed successfully!");
-          onUploadSuccess(json.url);
-        } else {
-          toast.error(json.error || "Failed to upload image.");
+          const json = await res.json();
+          if (res.ok && json.success && json.url) {
+            toast.success("Image uploaded successfully!");
+            onUploadSuccess(json.url);
+          } else {
+            toast.error(json.error || "Failed to upload image.");
+          }
+        } catch (err) {
+          console.error("Upload error:", err);
+          toast.error("Upload failed due to network error.");
+        } finally {
+          setIsUploading(false);
         }
-        setIsUploading(false);
       };
       reader.onerror = () => {
         toast.error("Failed to read image file.");
@@ -117,7 +128,7 @@ export default function DragDropUploader({
       className={`w-full min-h-[110px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer transition-all ${
         isDragActive
           ? "border-primary bg-primary/5 scale-[1.01]"
-          : "border-white/15 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20"
+          : "border-white/15 bg-gray-50 hover:bg-gray-50 hover:border-[var(--border)]"
       }`}
     >
       <input

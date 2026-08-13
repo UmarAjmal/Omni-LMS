@@ -4,17 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:mobile": "bash ../scripts/run-mobile.sh",
     "build": "next build",
+    "build:mobile": "node scripts/build-mobile.js",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.2",
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@radix-ui/react-dialog": "^1.1.21",
+    "firebase": "^12.16.0",
     "next": "^16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-toastify": "^11.1.0",
-    "supabase-js": "^0.0.1-security"
+    "react-toastify": "^11.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -30,13 +30,13 @@ pool.on('error', (err) => {
 const supabaseUrl = process.env.SUPABASE_URL ? process.env.SUPABASE_URL.trim() : '';
 const supabaseKey = process.env.SUPABASE_ANON_KEY ? process.env.SUPABASE_ANON_KEY.trim() : '';
 
-export const supabase = supabaseUrl.startsWith('http') 
+export const supabase = supabaseUrl.startsWith('http')
   ? createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-      realtime: {
-        transport: WebSocket as any,
-      }
-    }) 
+    auth: { persistSession: false },
+    realtime: {
+      transport: WebSocket as any,
+    }
+  })
   : null;
 
 
