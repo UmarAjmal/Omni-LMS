@@ -654,7 +654,7 @@ app.post('/api/applicants/:id/approve', authenticateToken, requireAdmin, async (
       category: 'System',
       title: 'Account Approved - Welcome to Falcon Swift!',
       message: `Your application has been approved. Your login email is ${applicant.email} and your default password is Password@123. Please login and change your password.`,
-      priority: 'high',
+      priority: 'critical',
       recipients: [studentId],
       createdBy: req.user?.id,
       sendEmail: true
@@ -1372,7 +1372,7 @@ app.post('/api/tasks', authenticateToken, requireAdminOrTrainer, async (req, res
         category: 'Assignment',
         title: `New Task: ${title}`,
         message: `You have been assigned a new task: ${title}. Due date: ${dueDate || 'N/A'}.`,
-        priority: 'high',
+        priority: 'critical',
         recipients: assignedStudentIds,
         createdBy: req.user?.id,
         sendEmail: true
@@ -2593,8 +2593,8 @@ app.get('/api/student/:studentId/fees', authenticateToken, requireStudent, async
 
 app.use('/api', campaignRoutes);
 
-app.listen(PORT, async () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', async () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
   try {
     await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false");
     console.log('✅ "users" table must_change_password column auto-migrated successfully!');

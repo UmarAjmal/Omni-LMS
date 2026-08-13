@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 const BACKEND =
   process.env.BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://omnilearn-lms.onrender.com";
+  "http://localhost:5000";
 
 async function handler(
   request: NextRequest,
@@ -97,8 +97,39 @@ async function handler(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[proxy] Fetch error for ${backendUrl}: ${message}`);
+
+    // If local backend (localhost) is offline, attempt fallback to production backend
+    if (BACKEND.includes("localhost")) {
+      const fallbackUrl = `https://omnilearn-lms.onrender.com/api/${path.join("/")}${qs ? `?${qs}` : ""}`;
+      console.log(`[proxy] Local backend unreachable. Falling back to production backend: ${fallbackUrl}`);
+      try {
+        const fallbackUpstream = await fetch(fallbackUrl, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            ...(request.headers.get("authorization")
+              ? { Authorization: request.headers.get("authorization")! }
+              : {}),
+          },
+          ...(body ? { body } : {}),
+        });
+
+        const contentType = fallbackUpstream.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const fallbackData = await fallbackUpstream.json();
+          return NextResponse.json(fallbackData, { status: fallbackUpstream.status });
+        }
+      } catch (fallbackErr: unknown) {
+        console.error(`[proxy] Fallback backend fetch error:`, fallbackErr);
+      }
+    }
+
     return NextResponse.json(
-      { success: false, error: `Proxy network error: ${message}` },
+      {
+        success: false,
+        error: `Backend server at ${BACKEND} is unreachable. Please start the server using 'npm run dev' inside the server directory. Details: ${message}`,
+      },
       { status: 502 }
     );
   }
