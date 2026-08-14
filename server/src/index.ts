@@ -28,10 +28,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 // ==========================================
 // GitHub Image Upload Configuration
 // ==========================================
-const GITHUB_OWNER = 'UmarAjmal';
-const GITHUB_REPO = 'OmniLearn.LMS';
-const GITHUB_BRANCH = 'main';
-const GITHUB_IMAGES_FOLDER = 'images';
+const GITHUB_OWNER = process.env.GITHUB_OWNER || 'UmarAjmal';
+const GITHUB_REPO = process.env.GITHUB_REPO || 'Omni-LMS';
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
+const GITHUB_IMAGES_FOLDER = process.env.GITHUB_IMAGES_FOLDER || 'images';
 
 async function uploadToGitHub(safeFilename: string, base64Content: string): Promise<string> {
   const token = process.env.GITHUB_TOKEN;
