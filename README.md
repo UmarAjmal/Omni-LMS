@@ -1,210 +1,188 @@
 # 🎓 OmniLearn LMS — Enterprise Learning Management & SaaS Platform
 
-[![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green.svg)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-v5.0-blue.svg)](https://expressjs.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-v16.2-black.svg)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-v19.0-61dafb.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-v5.0-3178c6.svg)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169e1.svg)](https://supabase.com/)
-[![Live Backend](https://img.shields.io/badge/Render-Live_API-brightgreen.svg)](https://omnilearn-lms.onrender.com)
-[![License](https://img.shields.io/badge/License-Commercial-gold.svg)](#)
+[![Live on Vercel](https://img.shields.io/badge/Vercel-Live_App-black.svg?style=for-the-badge&logo=vercel)](https://omni-learn-lms.vercel.app)
+[![Live on Render](https://img.shields.io/badge/Render-Live_API-46E3B7.svg?style=for-the-badge&logo=render)](https://omnilearn-lms.onrender.com)
+[![Next.js](https://img.shields.io/badge/Next.js_16-App_Router-000000.svg?style=for-the-badge&logo=nextdotjs)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React_19-Modern_UI-61DAFB.svg?style=for-the-badge&logo=react)](https://react.dev/)
+[![Express](https://img.shields.io/badge/Express_5-REST_API-000000.svg?style=for-the-badge&logo=express)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E.svg?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-> **OmniLearn LMS** is a full-featured, enterprise-grade Learning Management System & Training Automation Platform designed for academies, bootcamps, institutes, and corporate training providers. It features a complete student enrollment pipeline, interactive course builder, student portal, proof-of-work task submission system, admin grading suite, automated email engine, and cloud image hosting.
-
----
-
-## 🌐 Live Production Links
-
-* **🚀 Backend REST API (Render):** [`https://omnilearn-lms.onrender.com`](https://omnilearn-lms.onrender.com)
-* **⚡ Frontend Application (Vercel):** Optimized Next.js 16 App Router deployment target on Vercel.
-* **🗄️ Database Infrastructure:** PostgreSQL hosted on Supabase Cloud.
+> **OmniLearn LMS** is a full-featured, enterprise-grade Learning Management System & Training Automation Platform designed for academies, bootcamps, institutes, and corporate training providers. It features a complete student enrollment pipeline, interactive course builder, student portal, proof-of-work task submission system, admin grading suite, automated email engine, and zero-cost GitHub image hosting.
 
 ---
 
-## 🚀 Product Overview & Value Proposition
+## 🌐 Live Production Links & Demo Access
 
-**OmniLearn LMS** is built as a white-label, commercial SaaS product ready to sell to client organizations. It bridges the gap between public course applications, interactive learning, assignment submissions, and student evaluation.
-
-### Key Highlights for Clients & Organizations:
-* 💎 **End-to-End Student Journey:** From initial public registration form to account approval, course access, task submission, and graduation scoring.
-* 📧 **Automated SMTP Email System:** Sends personalized HTML acceptance and rejection emails with custom admin notes to applicants.
-* 🖼️ **Zero-Cost Storage Engine:** Uses GitHub Contents API for direct image uploads (course thumbnails & student proof screenshots) stored safely without third-party storage fees (S3).
-* 🛡️ **Robust Security & Roles:** JWT authentication with Bcrypt password hashing, enforcing strict Admin and Student role separations.
-* 📊 **Live Analytics & Progress Tracking:** Real-time metrics for both administrators and students.
+| Service | Environment | Live URL | Status |
+| :--- | :--- | :--- | :--- |
+| **⚡ Frontend Portal** | **Vercel** | [https://omni-learn-lms.vercel.app](https://omni-learn-lms.vercel.app) | 🟢 **Online** |
+| **🚀 Backend API** | **Render** | [https://omnilearn-lms.onrender.com](https://omnilearn-lms.onrender.com) | 🟢 **Online** |
+| **🗄️ Database** | **Supabase** | PostgreSQL Pooler Connection | 🟢 **Connected** |
 
 ---
 
-## 📦 Core Modules & Working Features
+## 🔑 Demo Login Credentials
 
-### 1. 📚 Interactive Course Builder Module (`/courses`)
-* **Step-by-Step Wizard:** Create courses effortlessly through basic details, section structure, lesson additions, thumbnail uploads, and pricing.
-* **Curriculum Management:** Hierarchical hierarchy (`Course -> Sections -> Lessons`).
-* **Bulk Curriculum Import:** CSV/Text parser for importing entire course outlines in seconds.
-* **Lesson Metadata:** Support for video/media links, hands-on tasks, project milestones, tech stack tags, and difficulty badges (Beginner, Intermediate, Advanced).
-* **Course Catalog:** Filtering, search, publishing controls (`draft` vs `published`), and price settings.
+You can instantly test the live application using the default administrator credentials:
 
-### 2. 📝 Public Training Application System (`/apply`)
-* **Public Form:** Captures student details including Full Name, Father Name, CNIC, Age, WhatsApp, Gmail, University, Department, Semester, Track preferences, and Reference Code.
-* **Account Auto-Creation Option:** Allows applicants to create a student portal login while applying.
-* **Duplicate Prevention:** Strict database-level checks on CNIC and Gmail to eliminate duplicate applications.
+```ini
+┌─────────────────────────────────────────────────────────────┐
+│                   👑 ADMIN DEMO CREDENTIALS                 │
+├─────────────────────────────────────────────────────────────┤
+│  Portal URL :  https://omni-learn-lms.vercel.app/login/staff │
+│  Username   :  admin                                        │
+│  Password   :  admin123                                     │
+│  Role       :  Super Administrator                          │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### 3. 👥 Applicants Review & Automated Enrollment (`/students/applicants`)
-* **Admin Review Dashboard:** View, filter, and inspect pending student applications.
-* **One-Click Approval:**
-  * Auto-generates unique Student Enrollment ID (e.g., `ENR-839210-4`).
-  * Creates `User` authentication account and `Student` registry record.
-  * Auto-triggers **Personalized HTML Acceptance Email** via SMTP featuring track tags and custom admin comments.
-* **One-Click Rejection:** Auto-triggers encouraging HTML rejection email with optional admin guidance.
-
-### 4. ⚡ Task & Proof-of-Work Submission Engine (`/tasks`, `/student/tasks`)
-* **Admin Task Distribution (`/tasks/new`):**
-  * Create rich assignments with title, description, points (0–100), due date, course label, and reference links.
-  * Assign tasks to specific students or batch-assign to all students in a track.
-* **Student Proof-of-Work Submission (`/student/submit-task`):**
-  * Students submit proof including GitHub Repository URL, Live Demo URL, Video walkthrough URL, text notes, and drag-and-drop screenshot uploads.
-  * Real-time status update (`pending` ➔ `completed` ➔ `marked`).
-
-### 5. 🎯 Admin Evaluation & Grading Portal (`/tasks/review`, `/tasks/completed`)
-* **Review Interface:** Dedicated interface for admins to view student code repos, live web apps, preview uploaded screenshots, and read student notes.
-* **Grading Engine:** Score submissions from 0 to 100 with detailed feedback comments.
-* **Historical Performance:** View past task scores and submission timestamps per student.
-
-### 6. 🎓 Student Dashboard & Profile (`/student/dashboard`, `/student/profile`)
-* **Student Dashboard:** Real-time statistics showing Total Tasks, Completed Tasks, Graded Tasks, Pending Tasks, and Average Score.
-* **Profile Center:** Manage personal details, WhatsApp contact, university background, avatar image, LinkedIn, GitHub, Portfolio, and Resume links.
-* **Smart Auto-Fill:** Auto-populates missing profile fields directly from the original application record.
-
-### 7. 🖼️ Cloud Image Upload Engine (`/api/upload`)
-* Custom drag-and-drop file uploader component with base64 conversion.
-* Server uploads images to the GitHub repository's `images/` directory via GitHub API.
-* Instant generation of CDN raw URLs (`https://raw.githubusercontent.com/...`) for thumbnails and proof attachments.
+> 💡 **Quick Navigation:**
+> * **Admin / Staff Login:** [`https://omni-learn-lms.vercel.app/login/staff`](https://omni-learn-lms.vercel.app/login/staff)
+> * **Student Login Portal:** [`https://omni-learn-lms.vercel.app/login/student`](https://omni-learn-lms.vercel.app/login/student)
+> * **Public Training Application:** [`https://omni-learn-lms.vercel.app/apply`](https://omni-learn-lms.vercel.app/apply)
 
 ---
 
-## 🛠️ Technology Stack
+## 🚀 Key Features & Core Modules
 
-| Layer | Technology | Usage |
-| :--- | :--- | :--- |
-| **Frontend** | **Next.js 16 (App Router)** | Full-stack SSR/SSG React framework |
-| **UI & Styling** | **Tailwind CSS v4 + Lucide Icons** | Modern responsive dark/light UI design system |
-| **Client Toast** | **React Toastify** | Instant feedback notifications |
-| **Backend API** | **Express 5 (Node.js)** | High-performance RESTful API service |
-| **Language** | **TypeScript 5/6** | End-to-end static typing safety |
-| **Database** | **Supabase PostgreSQL (`pg`)** | Relational cloud database with connection pooling |
-| **Authentication** | **JWT + Bcrypt.js** | Secure 24-hour JSON Web Tokens & salted password hashing |
-| **Email Engine** | **Nodemailer + Gmail SMTP** | Transactional HTML emails with responsive templates |
-| **Image Hosting** | **GitHub Contents API** | Direct repository-backed image CDN |
-| **Hosting (Server)** | **Render** | Docker/Node container live hosting |
-| **Hosting (Client)** | **Vercel** | Global edge distribution |
+### 1. 👥 Applicant Management & Automated Enrollment (`/students/applicants`)
+* **Public Form (`/apply`):** Captures complete applicant profiles with track preferences, university details, CNIC verification, WhatsApp, and auto-generated student credentials.
+* **Admin Review Dashboard:** Instant one-click application approval or rejection.
+* **Automated SMTP Email Engine:** Dispatches branded, responsive HTML acceptance and rejection emails with custom administrative remarks.
+* **Auto-Enrollment:** Instantly generates unique enrollment IDs (e.g. `ENR-839210-4`), provisions auth credentials, and populates student records.
+
+### 2. 📚 Interactive Course & Curriculum Builder (`/courses`)
+* **Step-by-Step Wizard:** Create courses with basic metadata, visual thumbnails, categories, tracks, and pricing.
+* **Hierarchical Curriculum:** Organize structured modules: `Course ➔ Sections ➔ Lessons`.
+* **Bulk Import:** One-click CSV/text curriculum parser for rapid syllabus creation.
+* **Rich Lesson Attributes:** Add video links, milestone targets, tech stack badges, and beginner/intermediate/advanced difficulty ratings.
+
+### 3. ⚡ Task & Proof-of-Work Submission Engine (`/tasks`, `/student/tasks`)
+* **Admin Task Creator (`/tasks/new`):** Create assignments with score ceilings, due dates, course associations, and reference links.
+* **Targeted Distribution:** Assign tasks individually or bulk-assign to entire course tracks.
+* **Student Proof Submission (`/student/submit-task`):**
+  * Students submit proof via GitHub Repository URL, Live Demo URL, Walkthrough Video, and detailed rich notes.
+  * Drag-and-drop screenshot uploader commits images directly to the GitHub CDN.
+  * Real-time lifecycle: `Pending ➔ Completed ➔ Graded`.
+
+### 4. 🎯 Admin Evaluation & Grading Portal (`/tasks/review`, `/tasks/completed`)
+* **Review Interface:** Admins inspect live code repos, test web apps, view uploaded proof screenshots, and read student notes.
+* **Grading System:** Grade submissions with precise scores and tailored feedback comments.
+* **Student Performance History:** Track cumulative scores, assignment completion velocity, and individual student progress over time.
+
+### 5. 🎓 Separate Student Portal (`/student/dashboard`, `/student/profile`)
+* **Live Dashboard:** Personal statistics cards showing Total Assigned Tasks, Completed Tasks, Graded Tasks, Pending Tasks, and Average Score.
+* **Student Profile:** Complete personal details, WhatsApp contact, university status, avatar, and CS professional handles (**LinkedIn, GitHub, Portfolio, Resume**).
+* **Smart Auto-Fill:** Pre-populates profile fields directly from the accepted application record.
+
+### 6. 🖼️ Cloud Image Hosting via GitHub Contents API (`/api/upload`)
+* Drag-and-drop image uploader with base64 conversion.
+* Programmatic commit and upload directly to GitHub repository (`images/` directory).
+* Instant generation of CDN raw URLs (`https://raw.githubusercontent.com/...`) for permanent image access without recurring cloud storage costs (S3/Cloudinary).
 
 ---
 
-## 🗄️ Database Architecture & Schemas
+## 🛠️ Technology Architecture
 
-The database schema auto-initializes and auto-migrates columns on server boot (`server/src/db_init.ts` & `server/src/index.ts`).
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      OmniLearn LMS                          │
+├──────────────────────────────┬──────────────────────────────┤
+│  Frontend (Vercel)           │  Backend (Render)            │
+│  - Next.js 16 (App Router)   │  - Node.js & Express 5       │
+│  - React 19 & TypeScript 5   │  - TypeScript 6 (nodenext)   │
+│  - Tailwind CSS v4           │  - JWT & Bcrypt Auth         │
+│  - React Toastify            │  - Nodemailer SMTP Service   │
+│  - Lucide & Material Icons   │  - GitHub Contents REST API  │
+├──────────────────────────────┴──────────────────────────────┤
+│  Database Infrastructure (Supabase)                         │
+│  - PostgreSQL 15+ with pg Connection Pooling                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Architecture & Relational Schema
 
 ```mermaid
 erDiagram
-    courses ||--o{ sections : "has many"
-    sections ||--o{ lessons : "has many"
-    users ||--o| students : "has profile"
-    students ||--o{ task_assignments : "assigned"
-    tasks ||--o{ task_assignments : "has submissions"
-    task_assignments ||--o| task_submissions : "contains proof"
-    applicants ||--o| users : "converts to"
-    training_applications ||--o| students : "enrolls"
+    COURSES ||--o{ SECTIONS : "contains"
+    SECTIONS ||--o{ LESSONS : "contains"
+    USERS ||--o| STUDENTS : "has profile"
+    STUDENTS ||--o{ TASK_ASSIGNMENTS : "assigned to"
+    TASKS ||--o{ TASK_ASSIGNMENTS : "tracks"
+    TASK_ASSIGNMENTS ||--o| TASK_SUBMISSIONS : "includes proof"
+    TRAINING_APPLICATIONS ||--o| STUDENTS : "enrolls into"
 ```
-
-### Table Overview:
-1. `courses` — Course details, category, thumbnail URL, price, and status (`draft`/`published`).
-2. `sections` — Course sections with ordering.
-3. `lessons` — Lessons inside sections with duration, media URL, milestone, and difficulty.
-4. `users` — Authentication credentials (`email`, `password_hash`, `role`).
-5. `applicants` — General inquiry applications.
-6. `students` — Registered student profile, enrollment ID, program, contacts, and social links.
-7. `training_applications` — Multi-track training applications submitted via `/apply`.
-8. `tasks` — Admin created assignments with points, due date, and reference links.
-9. `task_assignments` — Links tasks to students with status (`pending`, `completed`, `marked`), score, and feedback.
-10. `task_submissions` — Student proof of work (GitHub URL, live URL, screenshots, notes).
 
 ---
 
-## 📡 REST API Endpoints Reference
+## 📡 REST API Reference
 
-### 🔓 System & Auth
+### 🔐 Authentication & System
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/` | API Root Health Check |
-| `GET` | `/api/health` | System status & database connection check |
-| `POST` | `/api/auth/login` | User login (returns JWT token and user info) |
+| `GET` | `/` | API Root Health Status |
+| `GET` | `/api/health` | System health & DB connection diagnostics |
+| `POST` | `/api/auth/login` | Authenticate user & issue 24-hour JWT token |
 
 ### 📚 Course Builder
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/courses` | Fetch all courses with section/lesson counts |
-| `GET` | `/api/courses/:id` | Fetch single course with nested sections & lessons |
+| `GET` | `/api/courses` | Fetch all courses with section/lesson metrics |
+| `GET` | `/api/courses/:id` | Fetch single course with nested hierarchy |
 | `POST` | `/api/courses` | Create new course draft |
 | `PUT` | `/api/courses/:id` | Update course details |
-| `POST` | `/api/courses/:id/publish` | Publish course with price |
-| `POST` | `/api/courses/:id/sections` | Add section to course |
-| `PUT` | `/api/sections/:id` | Update section title / order |
-| `DELETE` | `/api/sections/:id` | Delete section |
-| `POST` | `/api/sections/:sectionId/lessons` | Add lesson to section |
-| `PUT` | `/api/lessons/:id` | Update lesson details |
-| `DELETE` | `/api/lessons/:id` | Delete lesson |
-| `POST` | `/api/courses/:id/bulk-curriculum` | Replace & bulk save entire curriculum |
+| `POST` | `/api/courses/:id/publish` | Publish course with pricing |
+| `POST` | `/api/courses/:id/sections` | Create new section |
+| `POST` | `/api/sections/:sectionId/lessons`| Add lesson to section |
+| `POST` | `/api/courses/:id/bulk-curriculum`| Bulk import curriculum outline |
 
-### 📝 Applications & Students
+### 👥 Applications & Students
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/training-applications` | Submit public training application (`/apply`) |
-| `GET` | `/api/training-applications` | Get pending training applications |
-| `GET` | `/api/training-applications/count` | Pending application count badge |
-| `POST` | `/api/training-applications/:id/approve` | Approve applicant, create student user, send email |
-| `POST` | `/api/training-applications/:id/reject` | Reject application & send email |
-| `GET` | `/api/students` | Get all registered students roster |
-| `GET` | `/api/students/profile?userId=X` | Get student profile |
-| `PUT` | `/api/students/profile` | Update student profile & social links |
-| `GET` | `/api/students/:studentId/dashboard-stats` | Get student completion statistics |
+| `GET` | `/api/training-applications` | Fetch pending training applications |
+| `POST` | `/api/training-applications/:id/approve` | Approve applicant, provision student, send email |
+| `POST` | `/api/training-applications/:id/reject` | Reject application with feedback email |
+| `GET` | `/api/students` | Get enrolled student roster |
+| `GET` | `/api/students/profile` | Get current student profile |
+| `PUT` | `/api/students/profile` | Update profile details & CS social handles |
+| `GET` | `/api/students/:studentId/dashboard-stats` | Get student progress statistics |
 
 ### ⚡ Tasks & Submissions
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/tasks` | Get all tasks |
-| `POST` | `/api/tasks` | Create task and assign to students |
-| `GET` | `/api/students/:studentId/tasks` | Get tasks assigned to a student |
-| `GET` | `/api/tasks/assignments/by-course/:courseId` | Get task assignments for a course |
-| `GET` | `/api/tasks/assignments/:assignmentId` | Get single assignment & student submission |
-| `POST` | `/api/tasks/assignments/:assignmentId/submit` | Submit proof of work (GitHub, Live URL, Images) |
-| `POST` | `/api/tasks/assignments/:assignmentId/grade` | Grade submission (score 0-100 & feedback) |
+| `GET` | `/api/tasks` | Fetch all assignments |
+| `POST` | `/api/tasks` | Create assignment and allocate to students |
+| `GET` | `/api/students/:studentId/tasks` | Get student's assigned tasks |
+| `GET` | `/api/tasks/assignments/:id` | Fetch assignment details & submission proof |
+| `POST` | `/api/tasks/assignments/:id/submit`| Submit task proof (GitHub, live demo, screenshots) |
+| `POST` | `/api/tasks/assignments/:id/grade` | Grade task submission (points & feedback) |
 
-### 🖼️ Utilities
+### 🖼️ Cloud Image Upload
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/upload` | Upload base64 image to GitHub & return CDN URL |
+| `POST` | `/api/upload` | Commit base64 image to GitHub and return CDN URL |
 
 ---
 
-## 💻 Local Installation & Setup Guide
+## 💻 Local Development Setup
 
-### Prerequisites
-* **Node.js**: v18.x or v20.x
-* **npm**: v9.x or higher
-* **PostgreSQL Database**: Supabase account or local PostgreSQL instance
-
-### 1. Repository Setup
+### 1. Clone Repository
 ```bash
-git clone https://github.com/UmarAjmal/OmniLearn.LMS.git
-cd OmniLearn.LMS
+git clone https://github.com/UmarAjmal/Omni-LMS.git
+cd Omni-LMS
 ```
 
-### 2. Backend Server Setup
+### 2. Configure Backend Server
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file in `server/.env`:
+Create `server/.env`:
 ```env
 PORT=5000
 DB_HOST=aws-1-ap-southeast-2.pooler.supabase.com
@@ -225,52 +203,52 @@ ADMIN_EMAIL=your_admin_email@gmail.com
 
 # GitHub Image Upload Token
 GITHUB_TOKEN=your_github_personal_access_token
+GITHUB_REPO=Omni-LMS
+GITHUB_OWNER=UmarAjmal
 ```
 
-Initialize DB & Start Server:
+Run server:
 ```bash
-# Initialize DB Schema
+# Initialize database schema
 npx tsx src/db_init.ts
 
-# Run in Development Mode
+# Start in development mode
 npm run dev
 ```
-*Server will start at `http://localhost:5000`*
 
-### 3. Frontend Client Setup
+### 3. Configure Frontend Client
 ```bash
 cd ../client
 npm install
 ```
 
-Create a `.env.local` file in `client/.env.local`:
+Create `client/.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-Start Next.js App:
+Run client:
 ```bash
 npm run dev
 ```
-*Client will start at `http://localhost:3000`*
+*Frontend runs on `http://localhost:3000`*
 
 ---
 
-## ☁️ Deployment Guide
+## ☁️ Deployment Instructions
 
 ### Deploying Backend to Render
-1. Create a new **Web Service** on [Render](https://render.com).
-2. Connect your GitHub repository `OmniLearn.LMS` and select the `server` root directory.
-3. Configuration:
+1. Create a **Web Service** on [Render](https://render.com).
+2. Connect your repository `Omni-LMS` and specify `server` as Root Directory.
+3. Configure Build & Start Commands:
    * **Build Command:** `npm install --include=dev && tsc`
    * **Start Command:** `node dist/index.js`
-4. Add all environment variables from `server/.env` to Render Environment settings.
-5. Set `PORT=5000`.
+4. Set Environment Variables in Render Dashboard (`PORT=5000`, `DB_*`, `JWT_SECRET`, `SMTP_*`, `GITHUB_TOKEN`).
 
 ### Deploying Frontend to Vercel
-1. Import `OmniLearn.LMS` into [Vercel](https://vercel.com).
+1. Import repository on [Vercel](https://vercel.com).
 2. Set Root Directory to `client`.
 3. Add Environment Variable:
    * `NEXT_PUBLIC_API_URL` = `https://omnilearn-lms.onrender.com`
@@ -278,17 +256,11 @@ npm run dev
 
 ---
 
-## 💼 Commercial Licensing & Client Customization
+## 👨‍💻 Author & Product Owner
 
-**OmniLearn LMS** is built with custom white-label capabilities for re-sale to clients:
-* **Custom Branding:** Easily modify brand logos, primary color accents in `client/app/globals.css`, and navigation headers.
-* **Email Templates:** Custom HTML transactional emails can be customized with client logos, social links, and institution branding.
-* **Multi-Domain Ready:** Deploy separate isolated frontend/backend instances per client.
+Developed & Maintained by **Muhammad Umar Ajmal**
 
----
+* **GitHub:** [@UmarAjmal](https://github.com/UmarAjmal)
+* **Project Repository:** [Omni-LMS](https://github.com/UmarAjmal/Omni-LMS)
 
-## 👨‍💻 Developer & Product Owner
-
-Developed and maintained by **Umar Ajmal** as a flagship SaaS & LMS Product.
-
-For client deployment inquiries, white-label customization, or feature additions, contact via the project repository.
+For commercial licensing, white-label setup, or corporate feature extensions, feel free to open an issue or get in touch.
